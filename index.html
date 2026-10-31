@@ -1,5 +1,5 @@
 <!doctype html><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-6bw1P1Cd9w9D00rMdwTumzjmOH16ANGSQiUg2UiaQnI=' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TBxIND1zCDnIlpISoe//0ecVFN0EPM1Knpnbrm+brzM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TBxIND1zCDnIlpISoe//0ecVFN0EPM1Knpnbrm+brzM=' 'sha256-fid+KQQuYuAFZSmpbFyJxbRw0YxPoPFeDZ1NINcwadc='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title>
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -1354,7 +1354,7 @@ const pagoK1 = () => sueldoYa() ? 0 : S.pago;
 const extraMes = n => (S.extrasMes || {})[n] || null;
 const extraPend = e => { const x = extraMes(e[0]); return x && !x.pagado ? e[1] + (x.deuda || 0) : 0; };
 function calc() {
-  const L = S.items, pendIt = L.filter(x => x.estado === 'pendiente').reduce((t, x) => t + x.queda, 0), extrasPend = EXTRAS.reduce((t, e) => t + extraPend(e), 0), pend = pendIt + extrasPend;
+  const L = S.items, pendIt = L.filter(x => x.estado === 'pendiente').reduce((t, x) => t + x.queda, 0), extrasPend = EXTRAS.reduce((t, e) => t + extraPend(e), 0), pend = pendIt + extrasPend + gcPend();
   const mutuos = L.filter(x => x.sec === 'mutuo'), personales = L.filter(x => x.sec !== 'mutuo');
   const mutuosP = mutuos.reduce((t, x) => t + parte(x), 0), fijo = personales.reduce((t, x) => t + x.valor, 0), plan = mutuosP + fijo;
   const arr = L.reduce((t, x) => t + (x.arrastre ? x.arrastre.tuyo || 0 : 0), 0) + EXTRAS.reduce((t, e) => t + ((extraMes(e[0]) || {}).deuda || 0), 0);
@@ -1364,7 +1364,7 @@ function calc() {
   const sorpresa = S.movs.filter(m => m.tipo === 'fuera').reduce((t, m) => t + m.monto, 0) + L.reduce((t, x) => t + (x.estado === 'pendiente' && x.queda < 0 ? -x.queda : 0), 0);
   const pendM = mutuos.filter(x => x.estado === 'pendiente');
   const pagadasMonto = L.filter(x => x.estado === 'pagado').reduce((t, x) => t + parte(x), 0);
-  return { pend, pendIt, extrasPend, totMes: plan + extras + arr, arrastre: arr, plan, pagado: plan - pendIt, pagadasMonto, abonos: plan - pendIt - pagadasMonto, mutuosTot: mutuos.reduce((t, x) => t + x.valor, 0), mutuosP, mutuosN: mutuos.reduce((t, x) => t + parteNio(x), 0), mutuosPend: pendM.reduce((t, x) => t + x.queda, 0), nioPendTot: pendM.reduce((t, x) => t + (x.nioPend || 0), 0), fijo, extras, extrasFijos, dif, nio, sube, nov, listas: L.filter(x => x.estado === 'pagado').length, total: L.length, presTot, presGas, pctMes: Math.round((DIA - 1) / DIAS_MES * 100), pctGas: presTot ? Math.round(presGas / presTot * 100) : 0, sorpresa, deptoOk: S.depto.filter(d => d.pasos.every(p => p[1])).length, libreMes: S.sueldo - plan };
+  return { pend, pendIt, extrasPend, totMes: plan + extras + arr + gcDep(), arrastre: arr, plan, pagado: plan - pendIt, pagadasMonto, abonos: plan - pendIt - pagadasMonto, mutuosTot: mutuos.reduce((t, x) => t + x.valor, 0), mutuosP, mutuosN: mutuos.reduce((t, x) => t + parteNio(x), 0), mutuosPend: pendM.reduce((t, x) => t + x.queda, 0), nioPendTot: pendM.reduce((t, x) => t + (x.nioPend || 0), 0), fijo, extras, extrasFijos, dif, nio, sube, nov, listas: L.filter(x => x.estado === 'pagado').length, total: L.length, presTot, presGas, pctMes: Math.round((DIA - 1) / DIAS_MES * 100), pctGas: presTot ? Math.round(presGas / presTot * 100) : 0, sorpresa, deptoOk: S.depto.filter(d => d.pasos.every(p => p[1])).length, libreMes: S.sueldo - plan };
 }
 let BONO = 0;
 const bonoEn = k => S.bonos && S.bonos[k] ? BONO : 0;
@@ -1433,7 +1433,7 @@ function pintarInicio() {
   // Resumen (lo que Pablo quiere ver primero): sueldo, lo que resta por pagar, lo libre, el próximo sueldo y la diferencia del mes siguiente.
   let h = avisoDrive() + avisoIphone() + `<div class="vineta"><h3>TU MES <span>${fechaPl()}</span></h3>
    ${fila({ ic: 'cofre', n: 'Sueldo Restante', sub: 'lo que tienes en el banco', v: m(S.banco) })}
-   ${fila({ ic: 'pergamino', n: 'Por pagar', sello: np ? sello('PENDIENTE', 'pe') : sello('NADA', 'ok'), sub: 'mutuos (tu 70%) + personales' + (r.extrasPend > .5 ? ' + extras' : ''), v: m(r.pend), vsub: 'ver ›', acc: ' data-ir="pablo" data-ver="pend"' })}
+   ${fila({ ic: 'pergamino', n: 'Por pagar', sello: np ? sello('PENDIENTE', 'pe') : sello('NADA', 'ok'), sub: 'mutuos (tu 70%) + personales' + (r.extrasPend > .5 ? ' + extras' : '') + (gcPend() > .5 ? ' + gasto común' : ''), v: m(r.pend), vsub: 'ver ›', acc: ' data-ir="pablo" data-ver="pend"' })}
    ${fila({ ic: 'nimbo', n: 'Diferencia', sello: sello('SE PUEDE GASTAR', 'ok'), sub: 'lo libre tras pagar todo', v: m(r.dif), color: 'verde', cls: 'f-grande' })}
    ${sueldoYa() ? fila({ ic: 'zeni', n: 'Pago Sueldo', sello: sello('LLEGÓ', 'ok'), sub: 'ya está en tu banco: no se suma otra vez', v: m(S.pago) }) : fila({ ic: 'zeni', n: 'Pago Sueldo', sub: 'escribe tu próximo sueldo y todo se recalcula', v: pago })}
    ${fila({ ic: 'sol', n: `Diferencia de ${mesN(1)}`, sello: sello('SE PUEDE GASTAR', 'ok'), sub: `con tu próximo sueldo, después de los gastos de ${mesN(1)} (${peso(gNov)})`, v: m(r.nov), color: 'verde' })}</div>
@@ -1628,14 +1628,18 @@ function hojaDepto(id) {
   if (id === 'arr') return hojaDeposito();
   const d = S.depto.find(z => z.id === id);
   const dep = S.depto.find(z => z.id === 'arr');
-  abrirHoja(d.n, `${d.pasos.every(q => q[1]) ? `<p class="todo-ok"><span class="esf-ok">${esfera(1)}</span>¡Todo al día!</p>` : ''}${d.aprox ? `<p class="hoja-big num">${peso(d.aprox)}</p>` : ''}<p class="sub">${d.id === 'gc' ? (dep && dep.monto ? `${peso(dep.monto)} que depositó − ${peso(ARRIENDO)} de arriendo` : 'estimado: aún no anotas el depósito de este mes') : d.sub || 'lo paga el arrendatario'}</p>${d.nota ? `<p class="nota" style="margin-top:8px">${d.nota}</p>` : ''}
+  abrirHoja(d.n, `${d.pasos.every(q => q[1]) ? `<p class="todo-ok"><span class="esf-ok">${esfera(1)}</span>¡Todo al día!</p>` : ''}${d.aprox ? `<p class="hoja-big num">${peso(d.aprox)}</p>` : ''}<p class="sub">${d.id === 'gc' ? (dep && dep.monto ? `${peso(dep.monto)} que depositó − ${peso(ARRIENDO)} de arriendo${gcPend() ? ' · sale de tu banco al marcar «Transferí a la administración»' : ''}` : 'estimado: aún no anotas el depósito de este mes') : d.sub || 'lo paga el arrendatario'}</p>${d.nota ? `<p class="nota" style="margin-top:8px">${d.nota}</p>` : ''}
    <p class="anton" style="font-size:14px;letter-spacing:1px;margin-top:16px">${d.id === 'gc' ? 'PASO A PASO' : 'CHECKLIST'}</p>
    ${d.pasos.map((p, i) => `${d.id === 'gc' && i === 0 ? '<p class="subt"><span>ARRENDATARIO</span></p>' : ''}${d.id === 'gc' && i === 1 ? '<p class="subt"><span>TU CHECKLIST</span></p>' : ''}<button class="marca ${p[1] ? 'on' : ''}" data-paso="${d.id}:${i}"><span class="caja">${p[1] ? '✓' : i + 1}</span><span><b>${p[0]}</b><small>${p[1] ? 'hecho' : d.id === 'gc' && i === 0 ? 'se marca solo al anotar el depósito' : 'pendiente'}</small></span></button>`).join('')}`, d.ic);
 }
-let ARRIENDO = 0, DIV_PLAN = 0;
+let ARRIENDO = 0, DIV_PLAN = 0, DIV_SUBE = 0;
 // Anota el depósito: arriendo fijo y el resto es gasto común; marca también «El arrendatario me depositó».
+const gcDep = () => { const a = S.depto.find(z => z.id === 'arr'), g = S.depto.find(z => z.id === 'gc'); return a && g && g.pasos[0] && g.pasos[0][1] && a.gc > 0 ? a.gc : 0; };
+const gcPend = () => { const g = S.depto.find(z => z.id === 'gc'); return gcDep() && g.pasos[1] && !g.pasos[1][1] ? gcDep() : 0; };
 function aplicarDeposito(T, banco) {
-  const gc = Math.max(T - ARRIENDO, 0), d = S.depto.find(z => z.id === 'arr');
+  const gc = Math.max(T - ARRIENDO, 0), d = S.depto.find(z => z.id === 'arr'), prev = d.monto || 0, dv = it('dividendo');
+  S.banco += T - prev;
+  if (dv && dv.estado === 'pendiente' && !d.subio && DIV_SUBE > 0) { dv.queda = Math.round((dv.queda + DIV_SUBE) * 10) / 10; d.subio = DIV_SUBE; }
   Object.assign(d, { monto: T, arr: Math.min(T, ARRIENDO), gc, fecha: FECHA_HOY, banco: banco || d.banco || 0 }); d.pasos[0][1] = true;
   const g = S.depto.find(z => z.id === 'gc'); if (g) { if (gc) g.aprox = gc; if (g.pasos[0]) g.pasos[0][1] = true; }
   return { arriendo: ARRIENDO, gasto_comun: gc };
@@ -1743,7 +1747,7 @@ function cerrarMes() {
   // 3) el mes nuevo: todo vuelve a «por pagar»; lo que elegiste pasar se suma
   S.items.forEach(y => { const d = deuda[y.id]; y.estado = 'pendiente'; y.queda = Math.round((parte(y) + (d ? d.queda : 0)) * 10) / 10; if (y.sec === 'mutuo') y.nioPend = Math.round((parteNio(y) + (d ? d.nioPend : 0)) * 10) / 10; y.nioOk = 0; y.arrastre = d ? { monto: Math.round(d.queda + d.nioPend), tuyo: Math.round(d.queda), de: MESES_N[0].toLowerCase() } : null; });
   EXTRAS.forEach(e => { if (e[2] === 'solo') e[1] = 0; }); S.extrasMes = {}; EXTRAS.forEach(e => { S.extrasMes[e[0]] = { pagado: false, deuda: deuda['extra:' + e[0]] ? Math.round(deuda['extra:' + e[0]]) : 0 }; });
-  S.depto.forEach(d => { if (d.id === 'arr' || d.id === 'gc') { d.pasos.forEach(q => { q[1] = false; }); delete d.monto; delete d.arr; delete d.gc; delete d.fecha; } });
+  S.depto.forEach(d => { if (d.id === 'arr' || d.id === 'gc') { d.pasos.forEach(q => { q[1] = false; }); delete d.monto; delete d.arr; delete d.gc; delete d.fecha; delete d.subio; } });
   const b = S.bonos && S.bonos.monto ? { monto: S.bonos.monto } : {}; Object.keys(S.bonos || {}).forEach(k => { if (/^\d+$/.test(k) && +k >= 1) b[+k - 1] = true; }); S.bonos = b;
   S.movs = []; S.pago = S.sueldo; S.sueldoRecibido = null;
   S.historial = [cerrado].concat((S.historial || []).map(h => { const c = Object.assign({}, h); delete c.antes; return c; })).slice(0, 36);
@@ -1960,7 +1964,9 @@ document.addEventListener('click', e => {
   if (d.celda) return hojaCelda(d.celda);
   if (d.mov) { const m = movsMes().find(x => x.id === d.mov); return abrirHoja(m.n, `<p class="hoja-big num" style="${m.tipo === 'ing' ? 'color:var(--ok)' : ''}">${m.tipo === 'ing' ? '+' : '−'}${peso(m.monto)}</p><p class="sub">${m.cuando}${m.nota ? ' · ' + m.nota : ''}</p>${m.item && it(m.item) && !sinVentana(it(m.item)) ? `<button class="btn sec ancho" data-item="${m.item}">VER LA CUENTA ${it(m.item).n.toUpperCase()} ›</button>` : ''}`, m.ic); }
   if (d.paso) { const [id, i] = d.paso.split(':'), dd = S.depto.find(z => z.id === id), p = dd.pasos[+i], antes = instante(), y = $('#hoja').scrollTop;
-    p[1] = !p[1]; repintar(); guardarEstado(); hojaDepto(id); $('#hoja').scrollTop = y;   // la hoja sigue abierta para marcar el siguiente
+    p[1] = !p[1];
+    if (id === 'gc' && +i === 1 && gcDep()) { const v = Math.round(gcDep()); if (p[1]) { S.banco -= v; S.movs.unshift({ id: 'gc' + Date.now(), n: 'Gastos comunes del depto', ic: dd.ic, monto: v, cuando: FECHA_HOY, tipo: 'plan', nota: 'transferido a la administración' }); } else { S.banco += v; const k = S.movs.findIndex(m => m.n === 'Gastos comunes del depto'); if (k >= 0) S.movs.splice(k, 1); } }
+    repintar(); guardarEstado(); hojaDepto(id); $('#hoja').scrollTop = y;   // la hoja sigue abierta para marcar el siguiente
     const todo = dd.pasos.every(q => q[1]); if (todo) celebrar('¡AL DÍA!');
     return aviso(todo ? `${dd.n}: ¡todo al día!` : `${p[0]}: ${p[1] ? 'hecho' : 'pendiente'}.`, () => { restaurar(antes); repintar(); guardarEstado(); if (!$('#hoja').hidden) hojaDepto(id); aviso('Listo, quedó como antes.'); }); }
   if (d.marca) { const x = it(d.id);
@@ -2217,8 +2223,8 @@ function aplicarGuardado(g) {
   if (g.mes && Number.isInteger(g.mes.anio) && Number.isInteger(g.mes.mes)) S.mes = { anio: g.mes.anio, mes: g.mes.mes };
   S.sueldoRecibido = Number.isInteger(g.sueldoRecibido) ? g.sueldoRecibido : null; S.extrasMes = g.extrasMes && typeof g.extrasMes === 'object' ? g.extrasMes : null; S.historial = Array.isArray(g.historial) ? g.historial : []; rehacerMeses();
   S.items.forEach(x => { const b0 = ITEMS0.find(y => y.id === x.id); if (b0) { x.ic = b0.ic; x.editable = b0.editable; } });
-  S.depto = clon(DEPTO0).map(d => { const v = (g.depto || []).find(z => z.id === d.id); return v ? Object.assign(d, { pasos: (v.pasos || []).length === d.pasos.length && v.pasos.every(q => Array.isArray(q) && typeof q[0] === 'string') ? v.pasos.map(q => [q[0], !!q[1]]) : d.pasos.map(p => [p[0], (q => q ? !!q[1] : p[1])((v.pasos || []).find(q => q[0] === p[0]))]), monto: v.monto, arr: v.arr, gc: v.gc, fecha: v.fecha, aprox: v.aprox || d.aprox, sub: v.sub || d.sub, nota: v.nota || d.nota, arriendo: v.arriendo || d.arriendo, divPlan: v.divPlan || d.divPlan }) : d; });
-  { const a = S.depto.find(z => z.id === 'arr'); if (a && a.arriendo > 0) ARRIENDO = a.arriendo; if (a && a.divPlan > 0) DIV_PLAN = a.divPlan; }
+  S.depto = clon(DEPTO0).map(d => { const v = (g.depto || []).find(z => z.id === d.id); return v ? Object.assign(d, { pasos: (v.pasos || []).length === d.pasos.length && v.pasos.every(q => Array.isArray(q) && typeof q[0] === 'string') ? v.pasos.map(q => [q[0], !!q[1]]) : d.pasos.map(p => [p[0], (q => q ? !!q[1] : p[1])((v.pasos || []).find(q => q[0] === p[0]))]), monto: v.monto, arr: v.arr, gc: v.gc, fecha: v.fecha, aprox: v.aprox || d.aprox, sub: v.sub || d.sub, nota: v.nota || d.nota, arriendo: v.arriendo || d.arriendo, divPlan: v.divPlan || d.divPlan, subeDiv: v.subeDiv || d.subeDiv, subio: v.subio }) : d; });
+  { const a = S.depto.find(z => z.id === 'arr'); if (a && a.arriendo > 0) ARRIENDO = a.arriendo; if (a && a.divPlan > 0) DIV_PLAN = a.divPlan; if (a && a.subeDiv > 0) DIV_SUBE = a.subeDiv; }
   (g.extras || []).forEach((e, i) => { if (!EXTRAS[i] || !e) return; if (typeof e[0] === 'string' && e[0] && e[0] !== EXTRAS[i][0]) { const ic = EXT_IC[EXTRAS[i][0]]; EXTRAS[i][0] = e[0]; if (ic && !EXT_IC[e[0]]) EXT_IC[e[0]] = ic; } if (e[1] > 0) EXTRAS[i][1] = e[1]; }); GU.base = g.base || null; GU.d0 = g.d0 || null; GU.mezcla = g.mezcla || null;
 }
 async function traerPlanilla(manual) {
