@@ -1,5 +1,5 @@
 <!doctype html><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TBxIND1zCDnIlpISoe//0ecVFN0EPM1Knpnbrm+brzM=' 'sha256-z6Vm3gM1r6IwFZyc5W2KJSZyrwvJ/Jdxk6rO39iCEg4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-6bw1P1Cd9w9D00rMdwTumzjmOH16ANGSQiUg2UiaQnI=' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TBxIND1zCDnIlpISoe//0ecVFN0EPM1Knpnbrm+brzM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title>
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -1320,8 +1320,8 @@ const DEPTO0 = [
 const SEC = { mutuo: 'GASTOS MUTUOS 70/30', manual: 'MANUALES', auto: 'AUTOMÁTICOS', tcnac: 'TARJETA NACIONAL', tcint: 'TARJETA INTERNACIONAL' };
 const SEC_PL = { manual: 'Gastos manuales', auto: 'Automáticos', tcnac: 'Tarjeta nacional', tcint: 'Tarjeta internacional' };
 const CATS = [['casa', 'Casa'], ['comida', 'Comida'], ['servicios', 'Servicios'], ['transporte', 'Transporte'], ['mascotas', 'Mascotas'], ['salud', 'Salud y aseo'], ['tecno', 'Tecnología']];
-const EXTRAS = [['Extra 1', 0], ['Extra 2', 0], ['Extra 3', 0]];
-const EXT_IC = { 'Extra 1': 'korin', 'Extra 2': 'lavadora', 'Extra 3': 'chip' };
+const EXTRAS = [['Extra 1', 0], ['Extra 2', 0], ['Extra 3', 0], ['Extra 4', 0, 'solo']];   // 'solo' = solo el mes en curso
+const EXT_IC = { 'Extra 1': 'korin', 'Extra 2': 'lavadora', 'Extra 3': 'chip', 'Extra 4': 'capsula' };
 // Calendario: el mes en curso de la app (S.mes) manda; los 12 meses de la proyección parten desde él.
 const NOMBRE_MES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 let MESES_N = [], DIAS_MES = 31, DIA = 1;
@@ -1339,7 +1339,7 @@ function rehacerMeses() {
 }
 // banco = «Sueldo Restante» de tu planilla (captura de Pablo del 16-oct) · sueldo = sueldo del plan · pago = próximo pago de sueldo (lo cambias cuando te paguen)
 const S = { mes: { anio: 2026, mes: 9 }, sueldoRecibido: null, extrasMes: null, historial: [], bonos: {}, cpf: 'pend', cnf: 'pend', banco: 0, sueldo: SUELDO0, pago: SUELDO0, items: clon(ITEMS0), depto: clon(DEPTO0), movs: [], cf: 'pend', hf: 'mes', hcat: null, pl: 'plan', pant: 'inicio' };
-const instante = () => clon({ mes: S.mes, sueldoRecibido: S.sueldoRecibido, extrasMes: S.extrasMes, bonos: S.bonos, banco: S.banco, sueldo: S.sueldo, pago: S.pago, items: S.items, depto: S.depto, movs: S.movs });
+const instante = () => clon({ extrasMontos: EXTRAS.map(e => e[1]), mes: S.mes, sueldoRecibido: S.sueldoRecibido, extrasMes: S.extrasMes, bonos: S.bonos, banco: S.banco, sueldo: S.sueldo, pago: S.pago, items: S.items, depto: S.depto, movs: S.movs });
 const restaurar = x => Object.assign(S, clon(x));
 const it = id => S.items.find(x => x.id === id);
 const parte = x => x.sec === 'mutuo' ? x.valor * .7 : x.valor;
@@ -1358,18 +1358,18 @@ function calc() {
   const mutuos = L.filter(x => x.sec === 'mutuo'), personales = L.filter(x => x.sec !== 'mutuo');
   const mutuosP = mutuos.reduce((t, x) => t + parte(x), 0), fijo = personales.reduce((t, x) => t + x.valor, 0), plan = mutuosP + fijo;
   const arr = L.reduce((t, x) => t + (x.arrastre ? x.arrastre.tuyo || 0 : 0), 0) + EXTRAS.reduce((t, e) => t + ((extraMes(e[0]) || {}).deuda || 0), 0);
-  const extras = EXTRAS.reduce((t, e) => t + e[1], 0), dif = S.banco - pend, nio = L.reduce((t, x) => t + (x.nio || 0), 0);
-  const sube = S.sueldo - plan - extras, nov = dif + pagoK1() - plan - extras;
+  const extras = EXTRAS.reduce((t, e) => t + e[1], 0), extrasFijos = EXTRAS.reduce((t, e) => t + (e[2] ? 0 : e[1]), 0), dif = S.banco - pend, nio = L.reduce((t, x) => t + (x.nio || 0), 0);
+  const sube = S.sueldo - plan - extrasFijos, nov = dif + pagoK1() - plan - extrasFijos;
   const variables = L.filter(x => x.variable), presTot = variables.reduce((t, x) => t + parte(x), 0), presGas = variables.reduce((t, x) => t + gastado(x), 0);
   const sorpresa = S.movs.filter(m => m.tipo === 'fuera').reduce((t, m) => t + m.monto, 0) + L.reduce((t, x) => t + (x.estado === 'pendiente' && x.queda < 0 ? -x.queda : 0), 0);
   const pendM = mutuos.filter(x => x.estado === 'pendiente');
   const pagadasMonto = L.filter(x => x.estado === 'pagado').reduce((t, x) => t + parte(x), 0);
-  return { pend, pendIt, extrasPend, totMes: plan + extras + arr, arrastre: arr, plan, pagado: plan - pendIt, pagadasMonto, abonos: plan - pendIt - pagadasMonto, mutuosTot: mutuos.reduce((t, x) => t + x.valor, 0), mutuosP, mutuosN: mutuos.reduce((t, x) => t + parteNio(x), 0), mutuosPend: pendM.reduce((t, x) => t + x.queda, 0), nioPendTot: pendM.reduce((t, x) => t + (x.nioPend || 0), 0), fijo, extras, dif, nio, sube, nov, listas: L.filter(x => x.estado === 'pagado').length, total: L.length, presTot, presGas, pctMes: Math.round((DIA - 1) / DIAS_MES * 100), pctGas: presTot ? Math.round(presGas / presTot * 100) : 0, sorpresa, deptoOk: S.depto.filter(d => d.pasos.every(p => p[1])).length, libreMes: S.sueldo - plan };
+  return { pend, pendIt, extrasPend, totMes: plan + extras + arr, arrastre: arr, plan, pagado: plan - pendIt, pagadasMonto, abonos: plan - pendIt - pagadasMonto, mutuosTot: mutuos.reduce((t, x) => t + x.valor, 0), mutuosP, mutuosN: mutuos.reduce((t, x) => t + parteNio(x), 0), mutuosPend: pendM.reduce((t, x) => t + x.queda, 0), nioPendTot: pendM.reduce((t, x) => t + (x.nioPend || 0), 0), fijo, extras, extrasFijos, dif, nio, sube, nov, listas: L.filter(x => x.estado === 'pagado').length, total: L.length, presTot, presGas, pctMes: Math.round((DIA - 1) / DIAS_MES * 100), pctGas: presTot ? Math.round(presGas / presTot * 100) : 0, sorpresa, deptoOk: S.depto.filter(d => d.pasos.every(p => p[1])).length, libreMes: S.sueldo - plan };
 }
 let BONO = 0;
 const bonoEn = k => S.bonos && S.bonos[k] ? BONO : 0;
 rehacerMeses();
-const proyeccion = () => { const r = calc(), m = [r.dif + bonoEn(0)]; for (let k = 1; k < 12; k++) m.push(m[k - 1] + (k === 1 ? pagoK1() : S.sueldo) - r.plan - r.extras + bonoEn(k)); return m; };
+const proyeccion = () => { const r = calc(), m = [r.dif + bonoEn(0)]; for (let k = 1; k < 12; k++) m.push(m[k - 1] + (k === 1 ? pagoK1() : S.sueldo) - r.plan - r.extrasFijos + bonoEn(k)); return m; };
 
 // ---------- Inicio ----------
 $('#nav-esf').innerHTML = bolaNav(1);
@@ -1425,7 +1425,7 @@ function porPagarTablet() {
 }
 function pintarInicio() {
   const r = calc(), hoy = S.movs.filter(m => esHoy(m) && m.tipo !== 'ing'), gHoy = hoy.reduce((t, m) => t + m.monto, 0), np = r.total - r.listas;
-  const m = v => verMontos ? peso(v) : '<span class="oc">$ ••••••</span>', gNov = r.plan + r.extras;
+  const m = v => verMontos ? peso(v) : '<span class="oc">$ ••••••</span>', gNov = r.plan + r.extrasFijos;
   const pendL = S.items.filter(x => x.estado === 'pendiente').sort((x, y) => quedaTotal(y) - quedaTotal(x));
   const vendran = S.items.filter(x => x.sec === 'mutuo' && x.estado === 'pendiente' && x.nioPend);
   const faltan = S.depto.reduce((t, d) => t + d.pasos.filter(p => !p[1]).length, 0);
@@ -1466,11 +1466,11 @@ function pintarPablo() {
   const filaP = x => fila({ ic: x.ic, n: x.n, sello: x.estado === 'pagado' ? sello('PAGADA', 'ok') : f === 'pag' ? sello('ABONO', 'pe') : sello('PENDIENTE', 'pe'), sub: subP(x), v: (okPablo(x) ? bolaP() : '') + peso(Math.max(monto(x), 0)), vsub: f === 'todas' ? (x.estado === 'pagado' ? '' : x.queda > .5 ? 'te quedan ' + peso(x.queda) : 'al día') : '', acc: sinVentana(x) ? '' : ` data-item="${x.id}"` });
   const rot = { pend: 'POR PAGAR', pag: 'PAGADO', todas: 'TOTAL' }[f];
   const grupo = (t, g) => `<div class="vineta"><h3>${t} <span class="num">${g.length ? rot + ' ' + peso(g.reduce((s, x) => s + Math.max(monto(x), 0), 0)) : ''}</span></h3>${g.length ? g.map(filaP).join('') : `<p class="vacio">${f === 'pend' ? 'Nada pendiente aquí. ¡Al día!' : 'Nada aquí todavía.'}</p>`}</div>`;
-  const r = calc(), totM = r.totMes, pctP = totM ? Math.round((totM - r.pend) / totM * 100) : 100, mu = lista.filter(x => x.sec === 'mutuo'), pe = lista.filter(x => x.sec !== 'mutuo'), suma = g => g.reduce((t, x) => t + Math.max(monto(x), 0), 0);
+  const r = calc(), totM = Math.max(r.totMes - r.pend, 0) + r.pend, pctP = totM ? Math.round((totM - r.pend) / totM * 100) : 100, mu = lista.filter(x => x.sec === 'mutuo'), pe = lista.filter(x => x.sec !== 'mutuo'), suma = g => g.reduce((t, x) => t + Math.max(monto(x), 0), 0);
   let h = `<div class="vineta quien"><h3>AVANCE DEL MES <span>MUTUOS + PERSONALES + EXTRAS</span></h3>${barraAvance('Pablo', pctP, `Pagado ${peso(totM - r.pend)} de ${peso(totM)}` + (r.pend > .5 ? ` · por pagar ${peso(r.pend)}` : ' · ¡al día!'), false)}</div>`;
   h += grupo('MUTUOS · TU 70%', mu) + grupo('PERSONALES · SOLO TUYAS', pe);
-  const ex = EXTRAS.filter(e => f === 'pend' ? extraPend(e) > .5 : f === 'pag' ? !extraPend(e) : true), vEx = e => f === 'pend' ? extraPend(e) : e[1];
-  if (ex.length) h += `<div class="vineta"><h3>EXTRAS · APARTE DE LAS CUENTAS <span class="num">${rot} ${peso(ex.reduce((t, e) => t + vEx(e), 0))}</span></h3>${ex.map(e => fila({ ic: EXT_IC[e[0]], n: e[0], sello: extraPend(e) ? sello('PENDIENTE', 'pe') : sello('PAGADO', 'ok'), sub: extraMes(e[0]) && extraMes(e[0]).deuda ? `incluye ${peso(extraMes(e[0]).deuda)} del mes anterior` : 'cada mes, como en tu planilla', v: peso(vEx(e)), acc: ` data-extra="${e[0]}"` })).join('')}</div>`;
+  const ex = EXTRAS.filter(e => !e[2] || e[1] > 0 || extraPend(e) > .5).filter(e => f === 'pend' ? extraPend(e) > .5 : f === 'pag' ? !extraPend(e) : true), vEx = e => f === 'pend' ? extraPend(e) : e[1];
+  if (ex.length) h += `<div class="vineta"><h3>EXTRAS · APARTE DE LAS CUENTAS <span class="num">${rot} ${peso(ex.reduce((t, e) => t + vEx(e), 0))}</span></h3>${ex.map(e => fila({ ic: EXT_IC[e[0]], n: e[0], sello: extraPend(e) ? sello('PENDIENTE', 'pe') : sello('PAGADO', 'ok'), sub: extraMes(e[0]) && extraMes(e[0]).deuda ? `incluye ${peso(extraMes(e[0]).deuda)} del mes anterior` : e[2] ? 'solo este mes, como en tu planilla' : 'cada mes, como en tu planilla', v: peso(vEx(e)), acc: ` data-extra="${e[0]}"` })).join('')}</div>`;
   h += `<div class="vineta"><h3 class="nar">DEPTO ARRENDADO <span>LO PAGA EL ARRENDATARIO</span></h3>${S.depto.map(filaDepto).join('')}</div>`;
   $('#cp-listas').innerHTML = h;
 }
@@ -1574,7 +1574,7 @@ function pintarProyeccion() {
   $('#p-porque').innerHTML = `<h3>¿POR QUÉ ${sobra ? 'TE SOBRAN' : 'TE FALTAN'} ${peso(Math.abs(r.sube))}? <span>CADA MES</span></h3>`
    + fila({ ic: 'zeni', n: 'Sueldo', sub: 'lo que te pagan cada mes', v: '+' + peso(S.sueldo), color: 'verde' })
    + fila({ ic: 'pergamino', n: 'Tus cuentas', sub: 'tu parte de todas las cuentas del mes', v: '−' + peso(r.plan), acc: ' data-ir="pablo" data-ver="todas"' })
-   + '<p class="subt"><span>APARTE DE LAS CUENTAS, COMO EN TU PLANILLA</span></p>' + EXTRAS.map(e => fila({ ic: EXT_IC[e[0]], n: e[0], sub: '', v: '−' + peso(e[1]) })).join('')
+   + '<p class="subt"><span>APARTE DE LAS CUENTAS, COMO EN TU PLANILLA</span></p>' + EXTRAS.filter(e => !e[2]).map(e => fila({ ic: EXT_IC[e[0]], n: e[0], sub: '', v: '−' + peso(e[1]) })).join('')
    + fila({ ic: 'estrella', n: sobra ? 'Te sobran cada mes' : 'Te faltan cada mes', sello: sobra ? sello('AHORRO', 'ok') : sello('OJO', 'pe'), sub: sobra ? 'se suma a lo libre de cada mes' : 'se resta de lo libre de cada mes', v: peso(Math.abs(r.sube)), color: sobra ? 'verde' : '', cls: 'tot' });
 }
 
@@ -1671,7 +1671,7 @@ function hojaNio() {
 }
 function hojaCalculo() {
   const r = calc();
-  abrirHoja('Así se calcula', `<p class="sub" style="margin:0 0 4px">Igual que tu planilla, bloque Pablo.</p><div class="casc">${lin('Sueldo Restante (tu banco hoy)', peso(S.banco))}${lin('− Lo que falta pagar del mes (tu parte)', peso(r.pend))}${lin('= Diferencia', peso(r.dif), 'res')}${lin(sueldoYa() ? '+ Pago Sueldo (ya está en tu banco)' : '+ Pago Sueldo', peso(pagoK1()))}${lin('= Sueldo Siguiente', peso(r.dif + pagoK1()), 'res')}${lin('− Gastos totales Pablo de ' + mesN(1), peso(r.plan))}${EXTRAS.map(e => lin('− ' + e[0], peso(e[1]))).join('')}${lin('= Diferencia de ' + mesN(1), peso(r.nov), 'res')}</div>
+  abrirHoja('Así se calcula', `<p class="sub" style="margin:0 0 4px">Igual que tu planilla, bloque Pablo.</p><div class="casc">${lin('Sueldo Restante (tu banco hoy)', peso(S.banco))}${lin('− Lo que falta pagar del mes (tu parte)', peso(r.pend))}${lin('= Diferencia', peso(r.dif), 'res')}${lin(sueldoYa() ? '+ Pago Sueldo (ya está en tu banco)' : '+ Pago Sueldo', peso(pagoK1()))}${lin('= Sueldo Siguiente', peso(r.dif + pagoK1()), 'res')}${lin('− Gastos totales Pablo de ' + mesN(1), peso(r.plan))}${EXTRAS.filter(e => !e[2]).map(e => lin('− ' + e[0], peso(e[1]))).join('')}${lin('= Diferencia de ' + mesN(1), peso(r.nov), 'res')}</div>
    ${r.nio ? `<p class="nota">Además Nio te debe ${peso(r.nio)}.</p>` : ''}
    <button class="btn sec ancho" data-accion="ver-falta">VER LO QUE FALTA PAGAR ›</button>`, 'cofre');
 }
@@ -1684,7 +1684,7 @@ function hojaMes(k) {
   const m = proyeccion(), r = calc();
   abrirHoja(MESES_N[k], `<p class="hoja-big num">${peso(m[k])}</p><p class="sub">Lo libre al cerrar el mes (tu Diferencia), igual que tu planilla</p>
    <button class="marca ${bonoEn(k) ? 'on' : ''}" data-bono="${k}" style="margin-top:12px"><span class="caja">${bonoEn(k) ? '✓' : '+'}</span><span><b>Este mes tengo bono</b><small>${bonoEn(k) ? 'sumado: ' : 'suma '}${peso(BONO)} a lo libre${bonoEn(k) ? ' · toca para quitarlo' : ''}</small></span></button>
-   <div class="casc" style="margin-top:12px">${k ? lin('Diferencia del mes anterior', peso(m[k - 1])) + lin(k === 1 && sueldoYa() ? '+ Pago de sueldo (ya está en tu banco)' : '+ Pago de sueldo', peso(k === 1 ? pagoK1() : S.sueldo)) + (bonoEn(k) ? lin('+ Bono', peso(BONO)) : '') + lin('− Tus cuentas', peso(r.plan)) + EXTRAS.map(e => lin('− ' + e[0], peso(e[1]))).join('') + lin('= Diferencia de ' + MESES_N[k].toLowerCase(), peso(m[k]), 'res')
+   <div class="casc" style="margin-top:12px">${k ? lin('Diferencia del mes anterior', peso(m[k - 1])) + lin(k === 1 && sueldoYa() ? '+ Pago de sueldo (ya está en tu banco)' : '+ Pago de sueldo', peso(k === 1 ? pagoK1() : S.sueldo)) + (bonoEn(k) ? lin('+ Bono', peso(BONO)) : '') + lin('− Tus cuentas', peso(r.plan)) + EXTRAS.filter(e => !e[2]).map(e => lin('− ' + e[0], peso(e[1]))).join('') + lin('= Diferencia de ' + MESES_N[k].toLowerCase(), peso(m[k]), 'res')
      : lin('Sueldo Restante (tu banco hoy)', peso(S.banco)) + lin('− Te queda por pagar', peso(r.pend)) + (bonoEn(0) ? lin('+ Bono', peso(BONO)) : '') + lin('= Diferencia de ' + mesN(0), peso(m[0]), 'res')}</div>
    ${k === 1 && !sueldoYa() ? '<button class="btn sec ancho" data-accion="pago">CAMBIAR EL SUELDO DE ESTE PAGO ✎</button>' : ''}
    ${k === 0 ? `<button class="btn ancho" data-accion="cuadrar" style="margin-top:14px">CUADRAR Y CERRAR ${MESES_N[0].toUpperCase()}</button><p class="nota" style="margin-top:6px">Lo disparas tú cuando quieras: primero cuadramos, después se cierra. Nada cambia hasta que confirmes.</p>` : ''}
@@ -1692,7 +1692,7 @@ function hojaMes(k) {
 }
 function hojaExtra(n) {
   const e = EXTRAS.find(z => z[0] === n), p = extraPend(e), x = extraMes(n);
-  abrirHoja(n, `<p class="hoja-big num">${peso(e[1])}</p><p class="sub">extra de cada mes, aparte de las cuentas (como en tu planilla)</p>${x && x.deuda && p ? `<div class="casc">${lin('Este mes', peso(e[1]))}${lin('+ Venía del mes anterior', peso(x.deuda))}${lin('= Por pagar', peso(p), 'res')}</div>` : ''}
+  abrirHoja(n, `<p class="hoja-big num">${peso(e[1])}</p><p class="sub">${e[2] ? 'extra solo de este mes' : 'extra de cada mes'}, aparte de las cuentas (como en tu planilla)</p>${x && x.deuda && p ? `<div class="casc">${lin('Este mes', peso(e[1]))}${lin('+ Venía del mes anterior', peso(x.deuda))}${lin('= Por pagar', peso(p), 'res')}</div>` : ''}
    <p class="anton" style="font-size:14px;letter-spacing:1px;margin-top:16px">ESTADO</p><button class="marca ${p ? '' : 'on'}" data-extrapag="${n}"><span class="caja">${p ? '' : '✓'}</span><span><b>${p ? 'Marcar como pagado' : 'Pagado'}</b><small>${p ? `saldrán ${peso(p)} de tu banco` : 'listo este mes'}</small></span></button>`, EXT_IC[n]);
 }
 // ---------- Cuadrar y cerrar el mes: lo dispara Pablo. Primero cuadra (cuentas sin pagar, banco, sueldo); recién al confirmar se cierra. ----------
@@ -1702,7 +1702,7 @@ function cuadrarLista() {
   const l = S.items.filter(x => x.estado === 'pendiente' && (x.queda > .5 || (x.sec === 'mutuo' && (x.nioPend || 0) > .5))).map(x => ({ id: x.id, n: x.n, ic: x.ic, monto: quedaTotal(x), tuyo: Math.max(x.queda, 0), nio: x.sec === 'mutuo' ? x.nioPend || 0 : 0, sobre: !!x.variable,
     sub: x.variable ? 'sobre del mes · lo que no gastaste' : x.sec === 'mutuo' ? `compartida · al pagarla salen ${peso(quedaTotal(x))}${x.nioPend ? ' y Nio te debe ' + peso(x.nioPend) : ''}` : 'solo tuya' }));
   const ini = !S.extrasMes;   // mes de partida: la app los tomó como pagados
-  return l.concat(EXTRAS.filter(e => ini || extraPend(e) > .5).map(e => ({ id: 'extra:' + e[0], n: e[0], ic: EXT_IC[e[0]], monto: ini ? e[1] : extraPend(e), tuyo: ini ? e[1] : extraPend(e), nio: 0, sobre: false, contado: ini, sub: ini ? 'extra del mes · ¿lo pagaste?' : 'extra del mes' })));
+  return l.concat(EXTRAS.filter(e => (ini && e[1] > 0) || extraPend(e) > .5).map(e => ({ id: 'extra:' + e[0], n: e[0], ic: EXT_IC[e[0]], monto: ini ? e[1] : extraPend(e), tuyo: ini ? e[1] : extraPend(e), nio: 0, sobre: false, contado: ini, sub: ini ? 'extra del mes · ¿lo pagaste?' : 'extra del mes' })));
 }
 function hojaCuadrar(y0) {
   if (CQ.mes !== mesKey()) Object.assign(CQ, { mes: mesKey(), elec: {}, banco: null, sinSueldo: false });
@@ -1742,7 +1742,7 @@ function cerrarMes() {
   const cerrado = { mes: clon(S.mes), nombre: nom, cerradoEl: new Date().toISOString(), bancoFin: real, plan: Math.round(r1.plan + r1.extras), sorpresa: Math.round(r1.sorpresa), nioDebe: Math.round(r1.nio), pasan, movs: clon(S.movs), antes };
   // 3) el mes nuevo: todo vuelve a «por pagar»; lo que elegiste pasar se suma
   S.items.forEach(y => { const d = deuda[y.id]; y.estado = 'pendiente'; y.queda = Math.round((parte(y) + (d ? d.queda : 0)) * 10) / 10; if (y.sec === 'mutuo') y.nioPend = Math.round((parteNio(y) + (d ? d.nioPend : 0)) * 10) / 10; y.nioOk = 0; y.arrastre = d ? { monto: Math.round(d.queda + d.nioPend), tuyo: Math.round(d.queda), de: MESES_N[0].toLowerCase() } : null; });
-  S.extrasMes = {}; EXTRAS.forEach(e => { S.extrasMes[e[0]] = { pagado: false, deuda: deuda['extra:' + e[0]] ? Math.round(deuda['extra:' + e[0]]) : 0 }; });
+  EXTRAS.forEach(e => { if (e[2] === 'solo') e[1] = 0; }); S.extrasMes = {}; EXTRAS.forEach(e => { S.extrasMes[e[0]] = { pagado: false, deuda: deuda['extra:' + e[0]] ? Math.round(deuda['extra:' + e[0]]) : 0 }; });
   S.depto.forEach(d => { if (d.id === 'arr' || d.id === 'gc') { d.pasos.forEach(q => { q[1] = false; }); delete d.monto; delete d.arr; delete d.gc; delete d.fecha; } });
   const b = S.bonos && S.bonos.monto ? { monto: S.bonos.monto } : {}; Object.keys(S.bonos || {}).forEach(k => { if (/^\d+$/.test(k) && +k >= 1) b[+k - 1] = true; }); S.bonos = b;
   S.movs = []; S.pago = S.sueldo; S.sueldoRecibido = null;
@@ -1754,7 +1754,7 @@ function cerrarMes() {
 }
 function volverCierre() {
   const h = (S.historial || [])[0]; if (!h || !h.antes) return;
-  const resto = S.historial.slice(1); restaurar(h.antes); S.historial = resto; rehacerMeses(); cerrarHoja(); repintar(); guardarEstado();
+  const resto = S.historial.slice(1); restaurar(h.antes); (h.antes.extrasMontos || []).forEach((v, i) => { if (EXTRAS[i] && typeof v === 'number') EXTRAS[i][1] = v; }); S.historial = resto; rehacerMeses(); cerrarHoja(); repintar(); guardarEstado();
   aviso(`Listo: volviste a ${h.nombre}, tal como estaba antes de cerrar.`);
 }
 function hojaHoy() {
