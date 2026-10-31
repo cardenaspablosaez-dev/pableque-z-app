@@ -1,7 +1,7 @@
 // Generado por herramientas/construir_iphone.py: no se edita a mano.
 // Guarda TODA la app en el iPhone y la sirve sin red. Una versión nueva se descarga en segundo plano
 // y se toma al volver a abrir la app (no cambia nada mientras la estás usando).
-const VERSION = '5ba254c8d7a9';
+const VERSION = '7ec1395644ab';
 const CACHE = 'pableque-z-' + VERSION;
 const ARCHIVOS = [
  "./",

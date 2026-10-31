@@ -1,5 +1,5 @@
 <!doctype html><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-KklbfmA1zgZE70vsj8wc1gwu/oOXKLwRDDkuwZRSPsI=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TBxIND1zCDnIlpISoe//0ecVFN0EPM1Knpnbrm+brzM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TBxIND1zCDnIlpISoe//0ecVFN0EPM1Knpnbrm+brzM=' 'sha256-lLe6j3i8Ol17UDNoWUxWoPr+e9wxliHysNyQozo/YNc='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title>
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -2034,7 +2034,7 @@ function avisoIphone() {
   if (!i.hayDatos) return `<div class="aviso-drive" id="aviso-iphone"><b>Trae tus datos</b><p>Toca IMPORTAR y elige el archivo con tus datos: «pableque-z-datos-iniciales.json» (te lo mandé por el chat; guárdalo antes en Archivos) o un respaldo .pzb de la tablet (mantén presionado el ícono Pableque Z › Exportar respaldo).</p><div class="ad-b"><button class="btn" data-accion="resp-importar">IMPORTAR</button><button class="btn sec" data-accion="resp-seguir">EMPEZAR EN BLANCO</button></div></div>`;
   if (!i.avisoSiete) return '';
   const n = diasSinRespaldo();
-  const txt = i.pedido ? 'Cerraste el mes: guarda un respaldo ahora y no pierdes nada.' : i.ultimo ? `Hace ${n} días que no guardas uno.` : `Llevas ${n} días usando la app sin respaldo.`;
+  const txt = i.pedido ? 'Guarda un respaldo cifrado ahora y no pierdes nada.' : i.ultimo ? `Hace ${n} días que no guardas uno.` : `Llevas ${n} días usando la app sin respaldo.`;
   return `<div class="aviso-drive" id="aviso-iphone"><b>Haz tu respaldo</b><p>${txt} Tus datos viven solo en este iPhone: si borras el ícono o iOS limpia la app, el archivo es lo que te los devuelve.</p><div class="ad-b"><button class="btn" data-accion="resp-exportar">HACER RESPALDO</button></div></div>`;
 }
 function vinetaRespaldo() {
@@ -2102,7 +2102,7 @@ async function respLeer(frase) {
 function respResumen(r) {
   const e = r.estado, pb = v => (typeof v === 'number' && isFinite(v)) ? peso(v) : '—', hay = PablequeRespaldo.info().hayDatos;
   const cuando = e.ts ? new Date(e.ts).toLocaleString('es-CL', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' }) : 'sin fecha';
-  RESP.estado = e;
+  RESP.estado = e; RESP.tipo = r.tipo;
   abrirHoja('Importar respaldo', `<p class="sub">Guardado el ${cuando} · ${r.tipo === 'pzb' ? 'respaldo cifrado' : 'archivo sin cifrar'}</p>
    <div class="casc">${lin('Sueldo restante (banco)', pb(e.banco))}${lin('Cuentas', (e.items || []).length)}${lin('Movimientos anotados', (e.movs || []).length)}${lin('Meses cerrados', (e.historial || []).length)}</div>
    <p class="sub" style="margin-top:10px">${hay ? `Ahora en este iPhone: banco ${peso(S.banco)} y ${S.movs.length} movimientos. Al importar se reemplaza todo esto; antes guardo una copia de lo actual.` : 'Este iPhone aún no tiene datos guardados: se usarán estos.'}</p>
@@ -2116,7 +2116,8 @@ async function respImportarOk() {
     const antes = instante();
     aplicarGuardado(clon(nuevo)); GU.ok = true; GU.avisado = false; RESP.estado = null; RESP.frase = null;
     cerrarHoja(); await guardarEstado(); pintarDeseo(true); repintar();
-    aviso('Respaldo importado. Ya está guardado en este iPhone.', () => { restaurar(antes); repintar(); guardarEstado(); aviso('Listo, quedó como antes.'); });
+    const claro = RESP.tipo !== 'pzb'; RESP.tipo = null; if (claro) { PablequeRespaldo.pedir(); repintar(); }
+    aviso(claro ? 'Datos importados. Borra ese archivo de Archivos (va sin cifrar) y haz tu primer respaldo cifrado.' : 'Respaldo importado. Ya está guardado en este iPhone.', () => { restaurar(antes); repintar(); guardarEstado(); aviso('Listo, quedó como antes.'); });
   } catch (e) { hojaMensaje('No pude importar', (e && e.message) || 'Probé y no resultó.'); }
 }
 // Al volver a la app después de días, el aviso de los 7 días se revisa solo.
