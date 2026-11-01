@@ -260,4 +260,4 @@
   window.EN_IPHONE = true;
 })();
 
-window.PZ_VERSION = '31-10-2026 18:50';
+window.PZ_VERSION = '01-11-2026 11:41';

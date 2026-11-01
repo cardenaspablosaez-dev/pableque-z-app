@@ -1,5 +1,5 @@
 <!doctype html><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TBxIND1zCDnIlpISoe//0ecVFN0EPM1Knpnbrm+brzM=' 'sha256-fid+KQQuYuAFZSmpbFyJxbRw0YxPoPFeDZ1NINcwadc='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TBxIND1zCDnIlpISoe//0ecVFN0EPM1Knpnbrm+brzM=' 'sha256-ck1K6g+K3OC0pJA/dZ5bR2RDcniuaz+NrIopM6Os0yg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title>
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -941,6 +941,7 @@ p.sub,p.nota,p.vacio,.previa,.aviso-drive p,.quien .frase{font-family:Inter,syst
  .camino .c{min-height:88px;padding:8px 4px}
 }
 .btn.ancho.cierre-inicio{display:block;box-sizing:border-box;width:calc(100% - 28px);max-width:calc(100% - 28px);margin:18px 14px 8px;border:2px solid #2a3270;box-shadow:4px 4px 0 #2a3270}.nota-cierre{margin:0 18px 18px;text-align:center;color:#c9d0f5}
+.f.f-sig{border-top:3px solid #2a3270}
 </style>
 
 <div id="app">
@@ -1428,15 +1429,18 @@ function pintarInicio() {
   const m = v => verMontos ? peso(v) : '<span class="oc">$ ••••••</span>', gNov = r.plan + r.extrasFijos;
   const pendL = S.items.filter(x => x.estado === 'pendiente').sort((x, y) => quedaTotal(y) - quedaTotal(x));
   const vendran = S.items.filter(x => x.sec === 'mutuo' && x.estado === 'pendiente' && x.nioPend);
-  const faltan = S.depto.reduce((t, d) => t + d.pasos.filter(p => !p[1]).length, 0);
+  const faltan = S.depto.reduce((t, d) => t + d.pasos.filter(p => !p[1]).length, 0), debe = r.nio > .5;
   const pago = verMontos ? `<label class="edit">$<input id="i-pago" inputmode="numeric" enterkeyhint="done" autocomplete="off" aria-label="Pago de sueldo" value="${S.pago.toLocaleString('es-CL')}"></label>` : m(S.pago);
   // Resumen (lo que Pablo quiere ver primero): sueldo, lo que resta por pagar, lo libre, el próximo sueldo y la diferencia del mes siguiente.
   let h = avisoDrive() + avisoIphone() + `<div class="vineta"><h3>TU MES <span>${fechaPl()}</span></h3>
-   ${fila({ ic: 'cofre', n: 'Sueldo Restante', sub: 'lo que tienes en el banco', v: m(S.banco) })}
+   ${fila({ ic: 'cofre', n: 'Sueldo Restante', sub: 'lo que tienes en el banco' + (debe ? ' · sin lo de Nio' : ''), v: m(S.banco), vsub: debe ? 'con Nio ' + m(S.banco + r.nio) : '' })}
    ${fila({ ic: 'pergamino', n: 'Por pagar', sello: np ? sello('PENDIENTE', 'pe') : sello('NADA', 'ok'), sub: 'mutuos (tu 70%) + personales' + (r.extrasPend > .5 ? ' + extras' : '') + (gcPend() > .5 ? ' + gasto común' : ''), v: m(r.pend), vsub: 'ver ›', acc: ' data-ir="pablo" data-ver="pend"' })}
-   ${fila({ ic: 'nimbo', n: 'Diferencia', sello: sello('SE PUEDE GASTAR', 'ok'), sub: 'lo libre tras pagar todo', v: m(r.dif), color: 'verde', cls: 'f-grande' })}
+   ${fila({ ic: 'nimbo', n: 'Diferencia', sello: sello('SE PUEDE GASTAR', 'ok'), sub: 'lo libre tras pagar todo' + (debe ? ' · sin lo de Nio' : ''), v: m(r.dif), vsub: debe ? 'con Nio ' + m(r.dif + r.nio) : '', color: 'verde', cls: 'f-grande' })}
+   ${debe ? fila({ ic: 'corazon', n: 'Nio te debe', sello: sello('SU 30%', 'ni'), sub: 'de las cuentas que pagaste completas · toca para marcar cuando te devuelva', v: m(r.nio), color: 'lila', acc: ' data-accion="nio"' }) : ''}
    ${sueldoYa() ? fila({ ic: 'zeni', n: 'Pago Sueldo', sello: sello('LLEGÓ', 'ok'), sub: 'ya está en tu banco: no se suma otra vez', v: m(S.pago) }) : fila({ ic: 'zeni', n: 'Pago Sueldo', sub: 'escribe tu próximo sueldo y todo se recalcula', v: pago })}
-   ${fila({ ic: 'sol', n: `Diferencia de ${mesN(1)}`, sello: sello('SE PUEDE GASTAR', 'ok'), sub: `con tu próximo sueldo, después de los gastos de ${mesN(1)} (${peso(gNov)})`, v: m(r.nov), color: 'verde' })}</div>
+   ${fila({ ic: 'cofre', n: `Sueldo de ${mesN(1)}`, sub: 'diferencia + pago sueldo', v: m(r.dif + pagoK1()), cls: 'f-sig' })}
+   ${fila({ ic: 'pergamino', n: `Gastos de ${mesN(1)}`, sub: 'tus cuentas (tu 70% en las compartidas) + extras', v: m(gNov) })}
+   ${fila({ ic: 'sol', n: `Diferencia de ${mesN(1)}`, sello: sello('SE PUEDE GASTAR', 'ok'), sub: `sueldo de ${mesN(1)} − gastos de ${mesN(1)}`, v: m(r.nov), vsub: debe ? 'con Nio ' + m(r.nov + r.nio) : '', color: 'verde' })}</div>
    <button class="btn ancho cierre-inicio" data-accion="cuadrar">CUADRAR Y CERRAR ${MESES_N[0].toUpperCase()}</button><p class="nota nota-cierre">Después quedas en ${MESES_N[1].replace(/ \d{4}$/, '').toLowerCase()}. Primero cuadramos; nada cambia hasta que confirmes.</p>`;
   $('#i-cuerpo').innerHTML = TABLET() ? `<div class="tab-cols"><div class="col">${h}${caminoTablet()}</div><div class="col">${porPagarTablet()}${quienVa()}</div></div>` : h;
   pintarEstadoPl();
