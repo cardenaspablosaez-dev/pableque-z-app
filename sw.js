@@ -1,7 +1,7 @@
 // Generado por herramientas/construir_iphone.py: no se edita a mano.
 // Guarda TODA la app en el iPhone y la sirve sin red. Una versión nueva se descarga sola (al abrir la app
 // o al volver a ella) y entra de inmediato: la app se recarga una vez y tus datos quedan igual (viven aparte).
-const VERSION = 'fd5f4089cfa5';
+const VERSION = '45441ea1c231';
 const CACHE = 'pableque-z-' + VERSION;
 const ARCHIVOS = [
  "./",
