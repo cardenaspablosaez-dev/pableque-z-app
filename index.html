@@ -1,5 +1,5 @@
 <!doctype html><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TBxIND1zCDnIlpISoe//0ecVFN0EPM1Knpnbrm+brzM=' 'sha256-ck1K6g+K3OC0pJA/dZ5bR2RDcniuaz+NrIopM6Os0yg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-CJzmQYzv1tKb/N8W2Qpu9ZN5AFsiPwUOrTwzcXJ6q2E=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-ck1K6g+K3OC0pJA/dZ5bR2RDcniuaz+NrIopM6Os0yg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title>
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -1034,7 +1034,7 @@ p.sub,p.nota,p.vacio,.previa,.aviso-drive p,.quien .frase{font-family:Inter,syst
 </div>
 
 <script src="plataforma.js"></script>
-<script>if ('serviceWorker' in navigator) addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });</script>
+<script>if ('serviceWorker' in navigator) addEventListener('load', function () { navigator.serviceWorker.register('sw.js').then(function (reg) { document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') reg.update().catch(function () {}); }); }).catch(function () {}); });</script>
 <script>// Íconos v3 con motivos de Dragon Ball (dibujo propio, sin arte oficial). Tinta pareja y sombreado "cel" de anime:
 // tono sombra + tono base hacia la luz (arriba a la izquierda) + brillo blanco. Sin ids ni degradados con url(#...),
 // para que se vean igual aunque el mismo ícono aparezca antes en una pantalla oculta (display:none).

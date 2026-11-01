@@ -1,7 +1,7 @@
 // Generado por herramientas/construir_iphone.py: no se edita a mano.
-// Guarda TODA la app en el iPhone y la sirve sin red. Una versión nueva se descarga en segundo plano
-// y se toma al volver a abrir la app (no cambia nada mientras la estás usando).
-const VERSION = '923440c887fa';
+// Guarda TODA la app en el iPhone y la sirve sin red. Una versión nueva se descarga sola (al abrir la app
+// o al volver a ella) y entra de inmediato: la app se recarga una vez y tus datos quedan igual (viven aparte).
+const VERSION = '8e8afde46838';
 const CACHE = 'pableque-z-' + VERSION;
 const ARCHIVOS = [
  "./",
@@ -30,12 +30,15 @@ const ARCHIVOS = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS.map(a => new Request(a, { cache: 'reload' })))));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS.map(a => new Request(a, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k.startsWith('pableque-z-') && k !== CACHE) await caches.delete(k);
+    let habia = false;
+    for (const k of await caches.keys()) if (k.startsWith('pableque-z-') && k !== CACHE) { habia = true; await caches.delete(k); }
     await self.clients.claim();
+    // si era una actualización, recarga la app abierta para que muestre la versión nueva al tiro
+    if (habia) for (const w of await self.clients.matchAll({ type: 'window' })) { try { await w.navigate(w.url); } catch (_) {} }
   })());
 });
 self.addEventListener('fetch', e => {
