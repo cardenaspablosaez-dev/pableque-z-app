@@ -1,5 +1,5 @@
 <!doctype html><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-8hHTbkxAmRgNrIS+tyn09dVYv9BG4vm0NLxwSP06FDc=' 'sha256-CJzmQYzv1tKb/N8W2Qpu9ZN5AFsiPwUOrTwzcXJ6q2E=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-3bVxSttvpLsIT1WTB7LZQEtR2BPW4O8KY3QTkW9Veuo=' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-CJzmQYzv1tKb/N8W2Qpu9ZN5AFsiPwUOrTwzcXJ6q2E=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title>
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -1278,21 +1278,25 @@ const TAM = { 1: .28, 2: .24, 3: .22, 4: .21, 5: .19, 6: .18, 7: .175 };
   if (!b) return;
   let ini = null, movio = false, recienMovido = false;
   const libre = () => !matchMedia('(orientation:landscape) and (min-width:1000px) and (min-height:560px)').matches;   // misma regla que TABLET()
-  const ajustar = (x, y) => [Math.min(Math.max(x, 4), innerWidth - b.offsetWidth - 4), Math.min(Math.max(y, 4), innerHeight - b.offsetHeight - 4)];
+  const zonaArriba = () => { const t = document.createElement('div'); t.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top,0px);visibility:hidden'; document.body.appendChild(t); const h = t.offsetHeight; t.remove(); return h; };
+  const pisoAbajo = () => { const n = document.getElementById('nav'); const r = n && n.getBoundingClientRect(); return r && r.height && r.top > innerHeight / 2 ? r.top : innerHeight; };
+  const ajustar = (x, y) => [Math.min(Math.max(x, 4), innerWidth - b.offsetWidth - 4), Math.min(Math.max(y, zonaArriba() + 4), pisoAbajo() - b.offsetHeight - 4)];
   const poner = (x, y) => { const [l, t] = ajustar(x, y); b.classList.add('fab-libre'); b.style.left = l + 'px'; b.style.top = t + 'px'; b.style.right = 'auto'; return [l, t]; };
   const leer = () => { try { return JSON.parse(localStorage.getItem(CL) || 'null'); } catch (e) { return null; } };
   const aplicar = () => { const g = leer(); if (g && libre()) poner(g.x, g.y); else if (!libre()) { b.classList.remove('fab-libre'); b.style.left = b.style.top = b.style.right = ''; } };
   aplicar();
   addEventListener('resize', aplicar);
-  b.addEventListener('pointerdown', e => { if (!libre()) return; const r = b.getBoundingClientRect(); ini = { px: e.clientX, py: e.clientY, dx: e.clientX - r.left, dy: e.clientY - r.top }; movio = false; });
+  let largo = null;
+  const volver = () => { try { localStorage.removeItem(CL); } catch (e) {} b.classList.remove('fab-libre'); b.style.left = b.style.top = b.style.right = ''; recienMovido = true; setTimeout(() => recienMovido = false, 600); ini = null; if (typeof aviso === 'function') aviso('DESEO volvió a su lugar.'); };
+  b.addEventListener('pointerdown', e => { if (!libre()) return; const r = b.getBoundingClientRect(); ini = { px: e.clientX, py: e.clientY, dx: e.clientX - r.left, dy: e.clientY - r.top }; movio = false; clearTimeout(largo); largo = setTimeout(() => { if (ini && !movio && b.classList.contains('fab-libre')) volver(); }, 700); });
   addEventListener('pointermove', e => {
     if (!ini) return;
     if (!movio && Math.hypot(e.clientX - ini.px, e.clientY - ini.py) < 8) return;
-    if (!movio) { movio = true; try { b.setPointerCapture(e.pointerId); } catch (_) {} b.classList.add('fab-arrastre'); }
+    if (!movio) { movio = true; clearTimeout(largo); try { b.setPointerCapture(e.pointerId); } catch (_) {} b.classList.add('fab-arrastre'); }
     poner(e.clientX - ini.dx, e.clientY - ini.dy); e.preventDefault();
   }, { passive: false });
   const soltar = () => {
-    if (!ini) return; ini = null; b.classList.remove('fab-arrastre');
+    clearTimeout(largo); if (!ini) return; ini = null; b.classList.remove('fab-arrastre');
     if (movio) { recienMovido = true; setTimeout(() => recienMovido = false, 400); const r = b.getBoundingClientRect(); try { localStorage.setItem(CL, JSON.stringify({ x: Math.round(r.left), y: Math.round(r.top) })); } catch (e) {} }
   };
   addEventListener('pointerup', soltar); addEventListener('pointercancel', soltar);
@@ -1483,9 +1487,9 @@ function pintarInicio() {
    ${fila({ ic: 'nimbo', n: 'Diferencia', sello: sello('SE PUEDE GASTAR', 'ok'), sub: 'lo libre tras pagar todo' + (debe ? ' · sin lo de Nio' : ''), v: m(r.dif), vsub: debe ? 'con Nio ' + m(r.dif + r.nio) : '', color: 'verde', cls: 'f-grande' })}
    ${nioBloque(r, m)}
    ${sueldoYa() ? fila({ ic: 'zeni', n: 'Pago Sueldo', sello: sello('LLEGÓ', 'ok'), sub: 'ya está en tu banco: no se suma otra vez', v: m(S.pago) }) : fila({ ic: 'zeni', n: 'Pago Sueldo', sub: 'escribe tu próximo sueldo y todo se recalcula', v: pago })}
-   ${fila({ ic: 'cofre', n: `Sueldo de ${mesN(1)}`, sub: 'diferencia + pago sueldo' + (debe ? ' · sin lo de Nio' : ''), v: m(r.dif + pagoK1()), vsub: debe ? 'con Nio ' + m(r.dif + pagoK1() + r.nio) : '', cls: 'f-sig' })}
+   ${fila({ ic: 'cofre', n: `Sueldo de ${mesN(1)}`, sub: 'diferencia + pago sueldo', v: m(r.dif + pagoK1()), vsub: debe ? 'con Nio ' + m(r.dif + pagoK1() + r.nio) : '', cls: 'f-sig' })}
    ${fila({ ic: 'pergamino', n: `Gastos de ${mesN(1)}`, sub: 'tus cuentas (tu 70% en las compartidas) + extras', v: m(gNov) })}
-   ${fila({ ic: 'sol', n: `Diferencia de ${mesN(1)}`, sello: sello('SE PUEDE GASTAR', 'ok'), sub: `sueldo de ${mesN(1)} − gastos de ${mesN(1)}` + (debe ? ' · sin lo de Nio' : ''), v: m(r.nov), vsub: debe ? 'con Nio ' + m(r.nov + r.nio) : '', color: 'verde' })}</div>
+   ${fila({ ic: 'sol', n: `Diferencia de ${mesN(1)}`, sello: sello('SE PUEDE GASTAR', 'ok'), sub: `sueldo de ${mesN(1)} − gastos de ${mesN(1)}`, v: m(r.nov), vsub: debe ? 'con Nio ' + m(r.nov + r.nio) : '', color: 'verde' })}</div>
    <button class="btn ancho cierre-inicio" data-accion="cuadrar">CUADRAR Y CERRAR ${MESES_N[0].toUpperCase()}</button><p class="nota nota-cierre">Después quedas en ${MESES_N[1].replace(/ \d{4}$/, '').toLowerCase()}. Primero cuadramos; nada cambia hasta que confirmes.</p>`;
   $('#i-cuerpo').innerHTML = TABLET() ? `<div class="tab-cols"><div class="col">${h}${caminoTablet()}</div><div class="col">${porPagarTablet()}${quienVa()}</div></div>` : h;
   pintarEstadoPl();
