@@ -1,5 +1,5 @@
 <!doctype html><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-CJzmQYzv1tKb/N8W2Qpu9ZN5AFsiPwUOrTwzcXJ6q2E=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-ck1K6g+K3OC0pJA/dZ5bR2RDcniuaz+NrIopM6Os0yg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-CJzmQYzv1tKb/N8W2Qpu9ZN5AFsiPwUOrTwzcXJ6q2E=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-mK8Jh9H6PnEHIa3hoGHTH57GGCE341y9sOFzeNm3kqg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title>
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -942,6 +942,7 @@ p.sub,p.nota,p.vacio,.previa,.aviso-drive p,.quien .frase{font-family:Inter,syst
 }
 .btn.ancho.cierre-inicio{display:block;box-sizing:border-box;width:calc(100% - 28px);max-width:calc(100% - 28px);margin:18px 14px 8px;border:2px solid #2a3270;box-shadow:4px 4px 0 #2a3270}.nota-cierre{margin:0 18px 18px;text-align:center;color:#c9d0f5}
 .f.f-sig{border-top:3px solid #2a3270}
+.nio-det{padding:4px 14px 14px;background:#f6f1ff;border-bottom:2.5px solid #2a3270}.nio-det .lin small{display:block;font-size:12px;color:#6b5a95;font-weight:600}.nio-bot{display:grid;gap:8px;margin-top:12px}.nio-txt{width:100%;box-sizing:border-box;font:16px/1.45 system-ui,sans-serif;padding:10px;border:2.5px solid #2a3270;border-radius:8px;margin:8px 0 12px;background:#fff;color:#141210}
 </style>
 
 <div id="app">
@@ -1424,6 +1425,25 @@ function porPagarTablet() {
   const seg = `<div class="seg">${[['pablo', 'Pablo'], ['nio', 'Nio'], ['todas', 'Todas']].map(([k, n]) => `<button data-itab="${k}" class="${t === k ? 'on' : ''}">${n}</button>`).join('')}</div>`;
   return seg + `<div class="vineta"><h3>${tit} <span class="num">${peso(tot)}</span></h3>${l.slice(0, 4).map(x => fila({ ic: x.ic, n: x.n, sello: sello('PENDIENTE', 'pe'), sub: sub(x), v: peso(monto(x)), acc: sinVentana(x) ? '' : ` data-item="${x.id}"` })).join('') || '<p class="vacio">Nada por pagar. ¡Al día!</p>'}${l.length ? `<button class="ver-mas"${ir}>${l.length > 4 ? `Ver las ${l.length} cuentas ›` : 'Ver el detalle ›'}</button>` : ''}</div>`;
 }
+let NIO_ABIERTO = false;
+// Lo de Nio por cuenta: ya = te debe porque pagaste tú la cuenta (completa o un abono) · falta = su 30% de lo que aún no se paga
+const nioPorCuenta = () => S.items.filter(x => x.sec === 'mutuo').map(x => ({ x, ya: x.nio || 0, falta: x.estado === 'pendiente' ? x.nioPend || 0 : 0 }))
+  .filter(c => c.ya + c.falta > .5).sort((a, b) => (b.ya + b.falta) - (a.ya + a.falta));
+function nioBloque(r, m) {
+  const tot = r.nio + r.nioPendTot; if (tot < .5) return '';
+  const sub = r.nio > .5 ? `ya te debe ${peso(r.nio)}${r.nioPendTot > .5 ? ` · más ${peso(r.nioPendTot)} de lo que falta pagar` : ''}` : 'su 30% de las cuentas compartidas · toca para ver el detalle';
+  let h = fila({ ic: 'corazon', n: 'Nio te debe', sello: sello(r.nio > .5 ? 'TE DEBE YA' : 'SU 30%', 'ni'), sub, v: m(tot), vsub: NIO_ABIERTO ? 'cerrar ˄' : 'ver detalle ˅', color: 'lila', cls: 'f-nio', acc: ' data-accion="nio-ver" aria-expanded="' + NIO_ABIERTO + '"' });
+  if (!NIO_ABIERTO) return h;
+  const l = nioPorCuenta();
+  return h + `<div class="nio-det"><div class="casc">${l.map(c => lin(`${c.x.n} <small>${c.ya > .5 && c.falta > .5 ? `ya ${peso(c.ya)} + falta ${peso(c.falta)}` : c.ya > .5 ? 'ya la pagaste tú' : 'aún sin pagar'}</small>`, peso(c.ya + c.falta))).join('')}`
+    + (r.nio > .5 ? lin('Ya te debe (cuentas que pagaste tú)', peso(r.nio)) : '') + (r.nioPendTot > .5 ? lin('Su parte de lo que falta pagar', peso(r.nioPendTot)) : '') + lin('= Total que te debe Nio', peso(tot), 'res') + `</div>
+    <div class="nio-bot"><button class="btn ancho" data-accion="nio-copiar">COPIAR PARA MANDARLE A NIO</button>${r.nio > .5 ? '<button class="btn sec ancho" data-accion="nio">MARCAR LO QUE TE DEVOLVIÓ ›</button>' : ''}</div></div>`;
+}
+function textoNio() {
+  const r = calc(), l = nioPorCuenta(), mes = MESES_N[0].replace(/ \d{4}$/, '').toLowerCase();
+  return `Nio, tu parte (30%) de ${mes}:\n` + l.map(c => `• ${c.x.n}: ${peso(c.ya + c.falta)}`).join('\n') + `\nTotal: ${peso(r.nio + r.nioPendTot)}`
+    + (r.nio > .5 ? `\n(de eso, ${peso(r.nio)} ya lo pagué yo)` : '');
+}
 function pintarInicio() {
   const r = calc(), hoy = S.movs.filter(m => esHoy(m) && m.tipo !== 'ing'), gHoy = hoy.reduce((t, m) => t + m.monto, 0), np = r.total - r.listas;
   const m = v => verMontos ? peso(v) : '<span class="oc">$ ••••••</span>', gNov = r.plan + r.extrasFijos;
@@ -1436,7 +1456,7 @@ function pintarInicio() {
    ${fila({ ic: 'cofre', n: 'Sueldo Restante', sub: 'lo que tienes en el banco' + (debe ? ' · sin lo de Nio' : ''), v: m(S.banco), vsub: debe ? 'con Nio ' + m(S.banco + r.nio) : '' })}
    ${fila({ ic: 'pergamino', n: 'Por pagar', sello: np ? sello('PENDIENTE', 'pe') : sello('NADA', 'ok'), sub: 'mutuos (tu 70%) + personales' + (r.extrasPend > .5 ? ' + extras' : '') + (gcPend() > .5 ? ' + gasto común' : ''), v: m(r.pend), vsub: 'ver ›', acc: ' data-ir="pablo" data-ver="pend"' })}
    ${fila({ ic: 'nimbo', n: 'Diferencia', sello: sello('SE PUEDE GASTAR', 'ok'), sub: 'lo libre tras pagar todo' + (debe ? ' · sin lo de Nio' : ''), v: m(r.dif), vsub: debe ? 'con Nio ' + m(r.dif + r.nio) : '', color: 'verde', cls: 'f-grande' })}
-   ${debe ? fila({ ic: 'corazon', n: 'Nio te debe', sello: sello('SU 30%', 'ni'), sub: 'de las cuentas que pagaste completas · toca para marcar cuando te devuelva', v: m(r.nio), color: 'lila', acc: ' data-accion="nio"' }) : ''}
+   ${nioBloque(r, m)}
    ${sueldoYa() ? fila({ ic: 'zeni', n: 'Pago Sueldo', sello: sello('LLEGÓ', 'ok'), sub: 'ya está en tu banco: no se suma otra vez', v: m(S.pago) }) : fila({ ic: 'zeni', n: 'Pago Sueldo', sub: 'escribe tu próximo sueldo y todo se recalcula', v: pago })}
    ${fila({ ic: 'cofre', n: `Sueldo de ${mesN(1)}`, sub: 'diferencia + pago sueldo', v: m(r.dif + pagoK1()), cls: 'f-sig' })}
    ${fila({ ic: 'pergamino', n: `Gastos de ${mesN(1)}`, sub: 'tus cuentas (tu 70% en las compartidas) + extras', v: m(gNov) })}
@@ -1998,6 +2018,9 @@ document.addEventListener('click', e => {
     case 'resp-seguir': return pedirConfirmar('¿Empezar en blanco? Cuando quieras importas tus datos y se reemplaza todo.', 'SÍ, EN BLANCO', () => guardarEstado().then(() => { pintarDeseo(true); repintar(); }));
     case 'anotar': return hojaAnotar();
     case 'nio': return hojaNio();
+    case 'nio-ver': NIO_ABIERTO = !NIO_ABIERTO; return pintarInicio();
+    case 'nio-copiar': { const t = textoNio(), aMano = () => { abrirHoja('Para Nio', '<p class="sub">Mantén presionado el texto, elige «Seleccionar todo» y copia.</p><textarea id="nio-txt" class="nio-txt" readonly rows="14"></textarea><button class="btn sec ancho" data-accion="cerrar">CERRAR</button>', 'corazon'); $('#nio-txt').value = t; };
+      try { return navigator.clipboard.writeText(t).then(() => aviso('Copiado. Pégalo en el chat con Nio.'), aMano); } catch (e) { return aMano(); } }
     case 'depto': return hojaDeptoTodo();
     case 'calculo': return hojaCalculo();
     case 'hoy': return hojaHoy();
