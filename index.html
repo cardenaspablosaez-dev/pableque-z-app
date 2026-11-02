@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-VNO8MiYx0GlYvRbioULmJjzhyQIvEZ8urNiwAjqaH/g='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-vtVv1h2Ehtv2B992JHBIKkFuCzdp0VANGoUa8l4592E='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -988,6 +988,12 @@ html :is(.num,.v2,.v2 *,.hoja-big,.previa b,.lin b,#i-pago,#pg-pantalla,#an-pant
 .pantalla.pre{color:#766650}
 /* v53w B5: texto solo para el lector de pantalla */
 .solo-lector{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* v53z Z2: montos ocultos (borrosos) fuera de las hojas; el ojo los muestra */
+body.montos-ocultos :is(.num,.v2,.mto,.hoja-big,.cv,.av-det,#i-pago):not(#hoja *):not(:focus){filter:blur(7px);-webkit-user-select:none;user-select:none}
+body.montos-ocultos .ojo-montos,body.montos-ocultos .ojo-montos *{filter:none!important}
+.ojo-montos{margin-left:8px;vertical-align:middle;display:inline-grid!important;place-items:center;width:32px;height:32px;border:2px solid var(--borde);border-radius:50%;background:var(--oro);flex:none;touch-action:manipulation}
+.ojo-montos svg{width:17px;height:17px}
+.ojo-montos:active{transform:scale(.94)}
 /* v53x X1: la C centrada en su cuadro */
 .tecla-c{display:grid;place-items:center;text-align:center;padding:0}
 /* v53x X2: texto de botones centrado y en líneas parejas */
@@ -1549,9 +1555,14 @@ function pintarCandado(b, animar) {
 $$('[data-candado]').forEach(b => b.addEventListener('click', () => { b.dataset.abierto = b.dataset.abierto === '1' ? '0' : '1'; pintarCandado(b, true); }));
 // Fila estándar (igual a Gastos mutuos): ícono · nombre + sello · explicación gris · monto a la derecha.
 const sello = (t, c) => `<span class="sello ${c}">${t}</span>`;
-const fila = o => { const tag = o.acc ? 'button' : 'div'; return `<${tag} class="f${o.cls ? ' ' + o.cls : ''}"${o.acc || ''}>${o.chk != null ? `<span class="selc${o.chk ? ' on' : ''}" aria-hidden="true">${o.chk ? '✓' : ''}</span>` : ''}${o.bola ? `<span class="mesb">${esfera(o.bola)}</span>` : o.mes ? `<span class="mesn">${o.mes}</span>` : icono(o.ic)}<span class="q"><b>${o.n}</b>${o.sello || ''}${o.sub ? `<small>${o.sub}</small>` : ''}</span><span class="v2 num${o.color ? ' ' + o.color : ''}">${o.v}${o.vsub ? `<small>${o.vsub}</small>` : ''}</span></${tag}>`; };
+const fila = o => { const tag = o.acc ? 'button' : 'div'; return `<${tag} class="f${o.cls ? ' ' + o.cls : ''}"${o.acc || ''}>${o.chk != null ? `<span class="selc${o.chk ? ' on' : ''}" aria-hidden="true">${o.chk ? '✓' : ''}</span>` : ''}${o.bola ? `<span class="mesb">${esfera(o.bola)}</span>` : o.mes ? `<span class="mesn">${o.mes}</span>` : icono(o.ic)}<span class="q"><b>${o.n}</b>${o.sello || ''}${o.sub ? `<small>${String(o.sub).replace(/[−-]?\$[\d.]+/g, '<span class="mto">$&</span>')}</small>` : ''}</span><span class="v2 num${o.color ? ' ' + o.color : ''}">${o.v}${o.vsub ? `<small>${o.vsub}</small>` : ''}</span></${tag}>`; };
 const mm = v => verMontos ? peso(v) : '<span class="oc">$ ••••••</span>';
 const ojoBtn = () => '';
+// v53z Z2: ojo de montos. Parte oculto cada vez que abres la app; el estado vale para todas las pestañas.
+var VER_MONTOS = false;
+const ojoMontos = () => `<button type="button" class="ojo-h ojo-montos" data-accion="ojo-montos" aria-pressed="${VER_MONTOS}" aria-label="${VER_MONTOS ? 'Ocultar los montos' : 'Mostrar los montos'}">${VER_MONTOS ? OJO_X : OJO}</button>`;
+function pintarOjo() { document.body.classList.toggle('montos-ocultos', !VER_MONTOS); $$('.ojo-montos').forEach(b => { b.innerHTML = VER_MONTOS ? OJO_X : OJO; b.setAttribute('aria-pressed', String(VER_MONTOS)); b.setAttribute('aria-label', VER_MONTOS ? 'Ocultar los montos' : 'Mostrar los montos'); }); }
+document.body.classList.add('montos-ocultos');
 const verMontos = true;
 const TAB_MQ = matchMedia('(orientation:landscape) and (min-width:1000px) and (min-height:560px)'), TABLET = () => TAB_MQ.matches;
 try { TAB_MQ.addEventListener('change', () => repintar()); } catch (e) {}
@@ -1611,7 +1622,7 @@ function pintarInicio() {
   // v53u C31: todo en $0 (sin banco, movimientos ni historial) = este iPhone perdió lo guardado: botón para traerlo y sin sellos.
   const avI = avisoIphone(), vacio = !Math.round(S.banco) && !S.movs.length && !(S.historial || []).length;
   const recupera = vacio && IPH() && !avI.includes('resp-importar') ? `<div class="aviso-drive" id="aviso-vacio"><b>Recupera tus datos</b><p>Todo está en $0: parece que este iPhone perdió lo guardado. Trae tu último respaldo y todo vuelve como estaba.</p><div class="ad-b"><button class="btn" data-accion="resp-importar">IMPORTAR RESPALDO</button></div></div>` : '';
-  let h = avisoDrive() + avI + recupera + `<div class="vineta"><h3>TU MES <span>${fechaPl()}</span></h3>
+  let h = avisoDrive() + avI + recupera + `<div class="vineta"><h3>TU MES <span>${fechaPl()}${ojoMontos()}</span></h3>
    ${fila({ ic: 'cofre', n: 'Sueldo Restante', sub: 'lo que tienes en el banco' + (debe ? ' · sin lo de Nio' : ''), v: m(S.banco), vsub: debe ? 'con Nio ' + m(S.banco + r.nio) : '' })}
    ${fila({ ic: 'pergamino', n: 'Por pagar', sello: vacio ? '' : np ? sello('PENDIENTE', 'pe') : sello('NADA', 'ok'), sub: 'mutuos (tu 70%) + personales' + (r.extrasPend > .5 ? ' + extras' : '') + (gcPend() > .5 ? ' + gasto común' : '') + (r.adel > .5 ? ' + adelanto de Nio' : '') + (r.depR > .5 ? ' + lo del depósito de ' + mesN(1) : ''), v: m(r.pend), vsub: 'ver ›', acc: ' data-ir="pablo" data-ver="pend"' })}
    ${fila({ ic: 'nimbo', n: 'Diferencia', sello: vacio ? '' : sello('SE PUEDE GASTAR', 'ok'), sub: 'lo libre tras pagar todo' + (debe ? ' · sin lo de Nio' : ''), v: m(r.dif), vsub: debe ? 'con Nio ' + m(r.dif + r.nio) : '', color: 'verde', cls: 'f-grande' })}
@@ -1661,8 +1672,8 @@ function pintarPablo() {
   const rot = { pend: 'POR PAGAR', pag: 'PAGADO', todas: 'TOTAL' }[f];
   const grupo = (t, g) => `<div class="vineta"><h3>${t} <span class="num">${g.length ? rot + ' ' + peso(g.reduce((s, x) => s + Math.max(monto(x), 0), 0)) : ''}</span></h3>${g.length ? g.map(filaP).join('') : `<p class="vacio">${f === 'pend' ? 'Nada pendiente aquí. ¡Al día!' : 'Nada aquí todavía.'}</p>`}</div>`;
   const r = calc(), totM = r.totMes, pctP = totM ? Math.round(r.pagado / totM * 100) : 100, mu = lista.filter(x => x.sec === 'mutuo'), pe = lista.filter(x => x.sec !== 'mutuo'), suma = g => g.reduce((t, x) => t + Math.max(monto(x), 0), 0);
-  let h = `<div class="vineta quien"><h3>AVANCE DEL MES <span>MUTUOS + PERSONALES + EXTRAS</span></h3>${barraAvance('Pablo', pctP, `Pagado ${peso(r.pagado)} de ${peso(totM)}` + (r.pendMes > .5 ? ` · por pagar ${peso(r.pendMes)}` : ' · ¡al día!'), false)}</div>`;
-  h += grupo('MUTUOS · TU 70%', mu) + grupo('PERSONALES · SOLO TUYAS', pe);
+  let h = `<div class="vineta quien"><h3>AVANCE DEL MES <span>MUTUOS + PERSONALES + EXTRAS${ojoMontos()}</span></h3>${barraAvance('Pablo', pctP, `Pagado ${peso(r.pagado)} de ${peso(totM)}` + (r.pendMes > .5 ? ` · por pagar ${peso(r.pendMes)}` : ' · ¡al día!'), false)}</div>`;
+  h += cardGastos() + grupo('MUTUOS · TU 70%', mu) + grupo('PERSONALES · SOLO TUYAS', pe);   // v53y Y2
   const ex = EXTRAS.filter(e => !e[2] || e[1] > 0 || extraPend(e) > .5).filter(e => f === 'pend' ? extraPend(e) > .5 : f === 'pag' ? !extraPend(e) : true), vEx = e => f === 'pend' ? extraPend(e) : e[1];
   if (ex.length) h += `<div class="vineta"><h3>EXTRAS · APARTE DE LAS CUENTAS <span class="num">${rot} ${peso(ex.reduce((t, e) => t + vEx(e), 0))}</span></h3>${ex.map(e => fila({ ic: EXT_IC[e[0]], n: e[0], sello: extraPend(e) ? sello('PENDIENTE', 'pe') : sello('PAGADO', 'ok'), sub: extraMes(e[0]) && extraMes(e[0]).deuda ? `incluye ${peso(extraMes(e[0]).deuda)} del mes anterior` : e[2] ? 'solo este mes, como en tu planilla' : 'cada mes, como en tu planilla', v: peso(vEx(e)), ...selFila('e:' + e[0], extraPend(e) > .5, ` data-extra="${e[0]}"`) })).join('')}</div>`;
   h += `<div class="vineta"><h3 class="nar">DEPTO ARRENDADO <span>LO PAGA EL ARRENDATARIO</span></h3>${S.depto.map(filaDepto).join('')}${deptoExtraFilas()}</div>`;
@@ -1806,7 +1817,7 @@ function pintarNio() {
   const l = mu.filter(x => monto(x) > .5).sort((a, b) => monto(b) - monto(a));
   const filaN = x => fila({ ic: x.ic, n: esc(x.n), sello: faltaNio(x) <= .5 ? sello('AL DÍA', 'ok') : f === 'pag' ? sello('ABONO', 'pe') : x.estado === 'pagado' ? sello('TE DEBE', 'ni') : sello('PENDIENTE', 'pe'), sub: `su 30% de ${peso(x.valor)}`, v: (faltaNio(x) <= .5 ? bolaN() : '') + peso(monto(x)), vsub: f === 'todas' && faltaNio(x) > .5 ? 'le falta ' + peso(faltaNio(x)) : '', acc: ` data-item="${x.id}"` });
   const rot = { pend: 'POR PAGAR', pag: 'PAGADO', todas: 'TOTAL' }[f];
-  let h = `<div class="vineta quien"><h3>AVANCE DEL MES <span>30% DE LO COMPARTIDO</span></h3>${barraAvance('Nio', pct, `Pagado ${peso(nT - nF)} de ${peso(nT)}` + (nF > .5 ? ` · por pagar ${peso(nF)}` : ' · ¡al día!'), true)}</div>`;
+  let h = `<div class="vineta quien"><h3>AVANCE DEL MES <span>30% DE LO COMPARTIDO${ojoMontos()}</span></h3>${barraAvance('Nio', pct, `Pagado ${peso(nT - nF)} de ${peso(nT)}` + (nF > .5 ? ` · por pagar ${peso(nF)}` : ' · ¡al día!'), true)}</div>`;
   h += `<div class="vineta"><h3>SU 30% <span class="num">${l.length ? rot + ' ' + peso(l.reduce((t, x) => t + monto(x), 0)) : ''}</span></h3>${l.length ? l.map(filaN).join('') : `<p class="vacio">${f === 'pend' ? 'Nio está al día. ¡Bien!' : 'Nada aquí todavía.'}</p>`}</div>`;
   if (r.nio > .5) h += `<div class="vineta"><h3>TE DEBE AHORA <span class="num">${peso(r.nio)}</span></h3>${fila({ ic: 'corazon', n: 'Nio te debe', sub: 'su 30% de cuentas que pagaste completas', v: peso(r.nio), color: 'lila', vsub: 'marcar ›', acc: ' data-accion="nio"' })}</div>`;
   h += cardMovs('nio', 'Aún no anotas pagos de Nio este mes.');
@@ -1864,12 +1875,19 @@ function movsMes() {
 const esMutuo = m => m.item && it(m.item) && it(m.item).sec === 'mutuo';
 const filaMov = (m, sinTipo) => `<button class="f" data-mov="${m.id}">${icono(m.ic)}<span class="q"><b>${esc(m.n)}</b>${m.tipo === 'fuera' ? '<span class="sello pe">SORPRESA</span>' : ''}<small>${[sinTipo || m.tipo === 'fuera' ? '' : m.item || m.tipo !== 'plan' ? apartado(m) : '', m.cuando, m.tipo === 'fuera' ? '' : esc(m.nota)].filter(Boolean).join(' · ')}</small></span><span class="v2 num" style="${m.tipo === 'ing' ? 'color:var(--ok)' : ''}">${m.tipo === 'ing' ? '+' : '−'}${peso(m.monto)}</span></button>`;
 const filaNioPago = m => m.pseudo ? fila({ ic: m.ic, n: m.n, sub: m.nota, v: '+' + peso(m.monto), color: 'verde' }) : filaMov(m);
+// v53y Y2: lo que anotas en DESEO › Gasté (sale de tu banco) queda a la vista en la pestaña Pablo.
+const gastosAnot = () => S.movs.filter(m => m.anot && m.tipo !== 'ing');
+function cardGastos() {
+  const l = gastosAnot(), t = l.reduce((s, m) => s + m.monto, 0);
+  return `<div class="vineta"><h3>TUS GASTOS ANOTADOS <span class="num">${l.length ? peso(t) : ''}</span></h3>${l.length ? l.slice(0, 4).map(m => filaMov(m)).join('') : '<p class="vacio">Lo que anotes en DESEO › Gasté aparece aquí, con lo que compraste.</p>'}${l.length > 4 ? `<button class="ver-mas" data-movs="gastos">Ver los ${l.length} gastos ›</button>` : ''}</div>`;
+}
 function movsDe(k) {
+  if (k === 'gastos') return gastosAnot();
   if (k === 'mutuo') return movsMes().filter(esMutuo);
   if (k === 'nio') return [...S.movs.filter(m => m.tipo === 'ing' && m.n === 'Nio me pagó'), ...S.items.filter(x => (x.nioOk || 0) - (x.nioOkG || 0) > .5).map(x => ({ id: 'nok-' + x.id, pseudo: true, n: esc(x.n), ic: x.ic, monto: x.nioOk - (x.nioOkG || 0), tipo: 'ing', nota: 'te devolvió su 30%' }))];
   return movsMes().filter(m => m.tipo === 'fuera' || (m.tipo === 'ing' && m.n !== 'Nio me pagó') || (m.item && it(m.item) && it(m.item).sec !== 'mutuo'));
 }
-const TIT_MOVS = { pablo: 'TUS GASTOS PERSONALES Y SORPRESAS', mutuo: 'GASTADO EN LO COMPARTIDO', nio: 'LO QUE NIO TE TRANSFIRIÓ' };
+const TIT_MOVS = { gastos: 'TUS GASTOS ANOTADOS', pablo: 'TUS GASTOS PERSONALES Y SORPRESAS', mutuo: 'GASTADO EN LO COMPARTIDO', nio: 'LO QUE NIO TE TRANSFIRIÓ' };
 function cardMovs(k, vacio) {
   const l = movsDe(k), fil = k === 'nio' ? filaNioPago : m => filaMov(m, k === 'mutuo'), sal = l.filter(m => m.tipo !== 'ing').reduce((t, m) => t + m.monto, 0), ent = l.filter(m => m.tipo === 'ing').reduce((t, m) => t + m.monto, 0);
   return `<div class="vineta"><h3>${TIT_MOVS[k]} <span class="num">${l.length ? (k === 'nio' ? '+' + peso(ent) : peso(sal)) : ''}</span></h3>${l.length ? l.slice(0, 5).map(fil).join('') : `<p class="vacio">${vacio}</p>`}${l.length > 5 ? `<button class="ver-mas" data-movs="${k}">Ver los ${l.length} movimientos ›</button>` : ''}</div>`;
@@ -2317,7 +2335,7 @@ function pintarDeseo(nuevo) {
   else { const h = $('#d-hoy'); if (h) h.textContent = hoy; }
 }
 function hojaAnotar(tipo, ing) {
-  A.tipo = tipo || null; A.monto = 0; A.pre = false; A.adel = null; A.ok = null; A.donde = 'super'; A.resp = null;
+  A.tipo = tipo || null; A.monto = 0; A.pre = false; A.adel = null; A.ok = null; A.donde = 'super'; A.resp = null; A.det = '';
   A.ing = ing || (calc().nio > .5 ? 'nio' : 'otro');   // nunca queda «Sueldo» elegido de la vez anterior
   if (!A.tipo) { cerrarHoja(); pintarDeseo(); if (S.pant !== 'deseo') ir('deseo'); return; }
   abrirHoja(TIPOS.find(t => t[0] === A.tipo)[1], '<div id="an-cuerpo"></div>', TIPOS.find(t => t[0] === A.tipo)[2]); cuerpoAnotar();
@@ -2327,6 +2345,7 @@ function cuerpoAnotar() {
   if (A.tipo === 'fijo') return cuerpoFijo();
   let h = '<button class="volver" data-accion="anotar">‹ cambiar lo que anotas</button>';
   if (A.tipo === 'gasto') h += `<p class="campo"><span>¿EN QUÉ?</span></p><div class="opciones">${DONDE.map(([k, t]) => `<button data-donde="${k}" class="${A.donde === k ? 'on' : ''}">${icono(k === 'fuera' ? 'sorpresa' : it(k).ic)}${t}</button>`).join('')}</div>`;
+  if (A.tipo === 'gasto') h += `<label class="campo"><span>¿QUÉ COMPRASTE? <small style="font-weight:600;letter-spacing:0">(opcional)</small></span><input id="an-det" maxlength="60" autocomplete="off" autocapitalize="sentences" enterkeyhint="done" placeholder="Ej.: pan y leche, cine, regalo" value="${esc(A.det || '')}"></label>`;   // v53y Y1
   if (A.tipo === 'ing') h += `<p class="campo"><span>¿QUÉ TE LLEGÓ?</span></p><div class="opciones tres">${INGRESOS.map(([k, t, ic]) => `<button data-ing="${k}" class="${A.ing === k ? 'on' : ''}">${icono(ic)}${t}</button>`).join('')}</div>`;
   if (A.tipo === 'ing' && A.ing === 'sueldo' && sueldoYa()) h += `<p class="nota" style="margin-top:8px;color:var(--rojo);font-weight:700">Ya anotaste el sueldo (${peso(sueldoAnotado())}) este mes. ¿Anotar otro? Antes de guardar te lo pregunto.</p>`;
   if (A.tipo === 'banco') h += `<p class="campo"><span>¿CUÁNTO DICE TU BANCO HOY?</span></p>`;
@@ -2335,6 +2354,7 @@ function cuerpoAnotar() {
   A.pre = false;   // monto sugerido: el primer número que toques lo reemplaza
   if (A.tipo === 'ing' && A.ing === 'nio' && calc().nio > .5) { A.monto = Math.round(calc().nio); A.pre = true; }
   if (A.tipo === 'ing' && A.ing === 'sueldo' && !sueldoYa()) { A.monto = S.pago; A.pre = true; }
+  const di = $('#an-det'); if (di) { di.oninput = () => { A.det = di.value; }; di.onkeydown = e => { if (e.key === 'Enter') di.blur(); }; }   // v53y Y1
   pintarMonto();
 }
 function pintarMonto() { const p = $('#an-pantalla'); if (p) { p.textContent = peso(A.monto); p.classList.toggle('pre', !!A.pre && !!A.monto); } if ($('#an-prev')) previaAnotar(); if ($('#f-prev')) previaFija(); }
@@ -2392,9 +2412,10 @@ function guardarAnotar() {
     const volverCq = CQ.espera && A.ing === 'sueldo', ing = A.ing, dest = A.adel; CQ.espera = false; A.ok = null;
     cambiar(`Anotado: ${t} +${peso(n)}.` + (esBono ? ' Era el bono: lo quité de Proyección para no contarlo dos veces.' : ''),
       () => { aplicarIngreso(n, ing, id, hora, dest); if (esBono) { S.bonos = Object.assign({}, S.bonos); delete S.bonos[0]; } }); if (volverCq) setTimeout(() => hojaCuadrar(), 450); return; }
-  if (A.donde === 'fuera') return cambiar(`Gasto sorpresa anotado: −${peso(n)}.`, () => aplicarGasto(n, 'fuera', '', id, hora));
+  const det = String(A.det || '').replace(/\s+/g, ' ').trim().slice(0, 60); A.det = '';   // v53y Y1: lo que compraste
+  if (A.donde === 'fuera') return cambiar(`Gasto sorpresa anotado${det ? ' (' + det + ')' : ''}: −${peso(n)}.`, () => aplicarGasto(n, 'fuera', det, id, hora));
   const x = it(A.donde);
-  cambiar(`Anotado en ${x.n}: −${peso(n)}.`, () => aplicarGasto(n, x.id, '', id, hora));
+  cambiar(`Anotado en ${x.n}${det ? ' (' + det + ')' : ''}: −${peso(n)}.`, () => aplicarGasto(n, x.id, det, id, hora));
 }
 // Un gasto: baja el banco y, si es de una cuenta del mes, lo que te queda de ella (70/30 con Nio si es compartida).
 function aplicarGasto(n, donde, detalle, id, hora) {
@@ -2565,6 +2586,7 @@ document.addEventListener('click', e => {
   if (d.itab) { S.itab = d.itab; return pintarInicio(); }
   if (d.bono !== undefined) { const k = +d.bono, on = !(S.bonos || {})[k]; return cambiar(on ? `Bono de ${peso(BONO)} sumado en ${MESES_N[k].toLowerCase()}.` : `Quité el bono de ${MESES_N[k].toLowerCase()}.`, () => { S.bonos = Object.assign({}, S.bonos); if (on) S.bonos[k] = true; else delete S.bonos[k]; }); }
   if (d.cnf) { S.cnf = d.cnf; return pintarNio(); }
+  if (d.accion === 'ojo-montos') { VER_MONTOS = !VER_MONTOS; pintarOjo(); return; }   // v53z Z2
   if (d.movs) return hojaMovs(d.movs);
   if (d.mes) return hojaMes(+d.mes);
   if (d.celda) return hojaCelda(d.celda);
@@ -2836,7 +2858,7 @@ function aplicarGuardado(g) {
   S.items.forEach(x => { const b0 = ITEMS0.find(y => y.id === x.id); if (b0) { x.ic = b0.ic; x.editable = b0.editable; } });
   // v53o: Luz, Agua y TAG, y todo lo que se carga a las tarjetas (cambia con el dólar), se paga con lo que te cobraron.
   // (por sección y no por id: en el iPhone las cuentas personales llegan con su id real solo en tus datos)
-  S.items.forEach(x => { if (!x.cobro && (['luz', 'agua', 'tag'].includes(x.id) || x.sec === 'tcnac' || x.sec === 'tcint')) x.cobro = 'variable'; });
+  S.items.forEach(x => { if (!x.cobro && (['luz', 'agua', 'tag', 'dividendo'].includes(x.id) || x.sec === 'tcnac' || x.sec === 'tcint')) x.cobro = 'variable'; });   // v53z Z1: + Dividendo
   // cuenta nueva (v53o): si tus datos no la tienen, entra pendiente este mes (el monto va aquí: el armado del iPhone deja ITEMS0 en cero)
   if (!S.items.some(x => x.id === 'servtc')) S.items.push({ id: 'servtc', cobro: 'variable', n: 'Servicio tarjeta nacional', ic: 'tarjeta', sec: 'tcnac', cat: 'servicios', valor: 4120, estado: 'pendiente', queda: 4120 });
   S.depto = clon(DEPTO0).map(d => { const v = (g.depto || []).find(z => z.id === d.id); return v ? Object.assign(d, { pasos: (v.pasos || []).length === d.pasos.length && v.pasos.every(q => Array.isArray(q) && typeof q[0] === 'string') ? v.pasos.map(q => [q[0], !!q[1]]) : d.pasos.map(p => [p[0], (q => q ? !!q[1] : p[1])((v.pasos || []).find(q => q[0] === p[0]))]), monto: v.monto, arr: v.arr, gc: v.gc, fecha: v.fecha, aprox: v.aprox || d.aprox, sub: v.sub || d.sub, nota: v.nota || d.nota, arriendo: v.arriendo || d.arriendo, divPlan: v.divPlan || d.divPlan, subeDiv: v.subeDiv || d.subeDiv, subio: v.subio, trans: typeof v.trans === 'number' ? v.trans : undefined }) : d; });

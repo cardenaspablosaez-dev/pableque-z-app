@@ -3,7 +3,7 @@
 // o al volver a ella) y entra sin cerrar la app: este archivo AVISA a la app abierta y la app se recarga sola
 // cuando no estás a mitad de algo (sin hoja abierta ni teclado). Tus datos quedan igual: este archivo no toca
 // IndexedDB ni localStorage.
-const VERSION = '2b528b9a4b0d';
+const VERSION = '1ac694436911';
 const CACHE = 'pableque-z-' + VERSION;
 const ARCHIVOS = [
  "./",
