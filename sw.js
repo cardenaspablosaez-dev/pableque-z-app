@@ -1,7 +1,9 @@
 // Generado por herramientas/construir_iphone.py: no se edita a mano.
 // Guarda TODA la app en el iPhone y la sirve sin red. Una versión nueva se descarga sola (al abrir la app
-// o al volver a ella) y entra de inmediato: la app se recarga una vez y tus datos quedan igual (viven aparte).
-const VERSION = '4b7c765ad04f';
+// o al volver a ella) y entra sin cerrar la app: este archivo AVISA a la app abierta y la app se recarga sola
+// cuando no estás a mitad de algo (sin hoja abierta ni teclado). Tus datos quedan igual: este archivo no toca
+// IndexedDB ni localStorage.
+const VERSION = '2b528b9a4b0d';
 const CACHE = 'pableque-z-' + VERSION;
 const ARCHIVOS = [
  "./",
@@ -28,6 +30,7 @@ const ARCHIVOS = [
  "manifest.webmanifest",
  "plataforma.js"
 ];
+const RECIBIDAS = new Set();
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS.map(a => new Request(a, { cache: 'reload' })))).then(() => self.skipWaiting()));
@@ -37,9 +40,19 @@ self.addEventListener('activate', e => {
     let habia = false;
     for (const k of await caches.keys()) if (k.startsWith('pableque-z-') && k !== CACHE) { habia = true; await caches.delete(k); }
     await self.clients.claim();
-    // si era una actualización, recarga la app abierta para que muestre la versión nueva al tiro
-    if (habia) for (const w of await self.clients.matchAll({ type: 'window' })) { try { await w.navigate(w.url); } catch (_) {} }
+    if (!habia) return;            // primera vez: nada que avisar
+    const ventanas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const w of ventanas) { try { w.postMessage({ tipo: 'version-nueva', version: VERSION }); } catch (_) {} }
+    // Una app abierta con una versión anterior a v53b no entiende el aviso: si no responde en 5 s, se recarga como antes.
+    setTimeout(async () => {
+      for (const w of ventanas) if (!RECIBIDAS.has(w.id)) {
+        try { const u = new URL(w.url); u.searchParams.set('actualizada', '1'); await w.navigate(u.href); } catch (_) {}
+      }
+    }, 5000);
   })());
+});
+self.addEventListener('message', e => {
+  if (e.data && e.data.tipo === 'version-recibida' && e.source) RECIBIDAS.add(e.source.id);
 });
 self.addEventListener('fetch', e => {
   const r = e.request;

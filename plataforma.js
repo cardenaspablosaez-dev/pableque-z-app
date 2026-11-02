@@ -12,14 +12,16 @@
   const MAX_BYTES = 2 * 1024 * 1024, MAX_COPIAS = 200, MAX_PREVIOS = 5, SIETE_DIAS = 3 * 24 * 3600 * 1000;
   // Mismas claves que estado_valido de servidor_finanzas.py y que Almacen.kt (la prueba pruebas/test_iphone.py las compara).
   const CLAVES = ['ts', 'base', 'banco', 'pago', 'sueldo', 'items', 'depto', 'movs', 'bonos', 'extras', 'd0', 'mezcla',
-    'mes', 'version', 'historial', 'reparto', 'bandeja', 'sueldoRecibido', 'extrasMes'];
-  const estadoValido = o => !!o && typeof o === 'object' && !Array.isArray(o) &&
+    'mes', 'version', 'historial', 'reparto', 'bandeja', 'sueldoRecibido', 'extrasMes', 'nioArrastre', 'gcArrastre', 'depAdel'];
+  // v53u C30: además, cada cuenta y cada movimiento debe ser un objeto (nada de null sueltos).
+  const esObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
+  const estadoValido = o => esObj(o) &&
     Object.keys(o).every(k => CLAVES.includes(k)) &&
-    (o.items === undefined || Array.isArray(o.items)) && (o.movs === undefined || Array.isArray(o.movs));
+    (o.items === undefined || (Array.isArray(o.items) && o.items.every(esObj))) && (o.movs === undefined || (Array.isArray(o.movs) && o.movs.every(esObj)));
   const bytesDe = t => new TextEncoder().encode(t).length;
   const ls = (f) => { try { return f(window.localStorage); } catch (e) { return null; } };
 
-  const E = { cargado: false, hayDatos: false, ultimo: null, desde: null, frase: null, lecturaFallida: false, texto: null, persistente: null, pedido: false };
+  const E = { cargado: false, hayDatos: false, ultimo: null, desde: null, frase: null, lecturaFallida: false, forzar: false, texto: null, persistente: null, pedido: false };
   // El teclado del iPhone cambia comillas y guiones por sus versiones "bonitas": se vuelven a las simples
   // para que la frase escrita en el iPhone sea la misma que en la tablet o el PC.
   const limpiarFrase = f => String(f == null ? '' : f)
@@ -116,19 +118,23 @@
   let cargando = null;
   const asegurarCarga = () => (cargando = cargando || cargar());
 
+  // v53b: si no se pudo leer lo guardado (lecturaFallida), NO se guarda nada solo: ni IndexedDB ni localStorage
+  // (una copia nueva en localStorage ganaría después y pisaría los datos que no se pudieron leer). Solo se vuelve a
+  // guardar cuando Pablo elige reemplazar (importar un respaldo o recuperar una copia): Respaldo.desbloquear().
   async function guardar(o) {
     if (!estadoValido(o)) throw err('formato', 'Los datos tienen una forma inesperada y no los guardé.');
     const texto = JSON.stringify(o);
     if (bytesDe(texto) > MAX_BYTES) throw err('muy_grande', 'Los datos pasan de 2 MB y no los guardé.');
     await asegurarCarga();
+    if (E.lecturaFallida && !E.forzar) throw err('bloqueado', 'No pude leer tus datos guardados: no guardo nada para no pisarlos.');
     const ts = Number(o.ts) || Date.now();
     let bien = false, causa = null;
-    if (!E.lecturaFallida) {
-      try { await escribirIDB(texto, ts); bien = true; } catch (e) { causa = e; }
-    }
+    // v53u C30: localStorage primero (es inmediato): si la app se cierra a mitad, la copia nueva ya quedó.
     const l = ls(s => { s.setItem('pz_estado', texto); return true; });
     if (l) bien = true;
+    try { await escribirIDB(texto, ts); bien = true; } catch (e) { causa = e; }
     if (!bien) throw err('error_guardado', 'No pude guardar en este iPhone' + (causa && causa.message ? ' (' + causa.message + ')' : '') + '.');
+    E.lecturaFallida = false; E.forzar = false;
     E.hayDatos = true; E.texto = texto;
     if (!E.desde) { E.desde = Date.now(); ajuste('desde', E.desde); }
   }
@@ -185,21 +191,48 @@
   const fechaChile = (t) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit' }).format(t || new Date());
 
   const Respaldo = {
-    info() { return { cargado: E.cargado, hayDatos: E.hayDatos, ultimo: E.ultimo, desde: E.desde, fraseGuardada: !!E.frase, persistente: E.persistente, pedido: E.pedido, avisoSiete: this.pasaronSiete() }; },
+    info() { return { cargado: E.cargado, hayDatos: E.hayDatos, ultimo: E.ultimo, desde: E.desde, fraseGuardada: !!E.frase, persistente: E.persistente, pedido: E.pedido, avisoSiete: this.pasaronSiete(), bloqueado: E.lecturaFallida && !E.forzar }; },
+    // Pablo eligió reemplazar lo que hay (importar o recuperar una copia): el próximo guardado sí se escribe.
+    desbloquear() { if (E.lecturaFallida) E.forzar = true; },
+    // Vuelve a mirar lo guardado: lo último + las copias por hora (las 12 más nuevas). Falla si sigue sin poder leer.
+    async copias() {
+      return transaccion(['estado', 'copias'], 'readonly', t => {
+        const v = { valor: { actual: null, lista: [] } };
+        t.objectStore('estado').get('actual').onsuccess = e => { const x = e.target.result; v.valor.actual = x && x.texto ? { ts: x.ts || null } : null; };
+        t.objectStore('copias').getAllKeys().onsuccess = e => {
+          v.valor.lista = e.target.result.slice().sort().reverse().slice(0, 12).map(h => ({ hora: h, ts: Date.parse(h + ':00:00Z') || null }));
+        };
+        return v;
+      });
+    },
+    // Lee una copia ('actual' o la hora de una copia) y la entrega como un archivo importado: {tipo: 'copia', estado}.
+    async leerCopia(clave) {
+      const x = await transaccion(['estado', 'copias'], 'readonly', t => {
+        const v = { valor: null };
+        (clave === 'actual' ? t.objectStore('estado').get('actual') : t.objectStore('copias').get(String(clave))).onsuccess = e => { v.valor = e.target.result || null; };
+        return v;
+      });
+      const o = x && x.texto ? parsear(x.texto) : null;
+      if (!o) throw err('formato', 'Esa copia está vacía o dañada. Elige otra o importa un respaldo.');
+      return { tipo: 'copia', estado: o };
+    },
     pasaronSiete() { const base = E.ultimo || E.desde; return !!(E.hayDatos && (E.pedido || (base && Date.now() - base >= SIETE_DIAS))); },
     // Después de cerrar el mes: el aviso «Haz tu respaldo» sale al tiro, hasta que exportes.
     pedir() { E.pedido = true; ajuste('pedido', '1'); },
     revisarFrase,
     async guardarFrase(f) { f = limpiarFrase(f); const m = revisarFrase(f); if (m) throw err('frase', m); E.frase = f; await ajuste('frase', f); },
     // Cifra lo guardado en el iPhone. Devuelve {bytes, nombre}. Sin frase guardada hay que pasar una.
-    async crear(fraseNueva) {
+    // v53b: con `textoVisto` cifra eso (lo que se ve en pantalla) en vez de lo guardado: sirve cuando no se pudo leer.
+    async crear(fraseNueva, textoVisto) {
       await asegurarCarga();
       const frase = fraseNueva ? limpiarFrase(fraseNueva) : E.frase;
       if (!frase) throw err('pide_frase', 'Falta la frase del respaldo.');
       const m = revisarFrase(frase); if (m) throw err('frase', m);
-      if (!E.texto) throw err('sin_datos', 'Todavía no hay nada guardado en este iPhone.');
-      const bytes = await cifrar(new TextEncoder().encode(E.texto), frase);
-      return { bytes, nombre: 'pableque-z-respaldo-' + fechaChile() + '.pzb' };
+      const texto = textoVisto || E.texto;
+      if (!texto) throw err('sin_datos', 'Todavía no hay nada guardado en este iPhone.');
+      if (textoVisto && !parsear(textoVisto)) throw err('formato', 'Lo que ves en pantalla tiene una forma inesperada y no lo pude cifrar.');
+      const bytes = await cifrar(new TextEncoder().encode(texto), frase);
+      return { bytes, nombre: 'pableque-z-respaldo-' + fechaChile() + (textoVisto ? '-pantalla' : '') + '.pzb', visto: !!textoVisto };
     },
     // Entrega el archivo: hoja de compartir de iOS («Guardar en Archivos»); si no se puede, descarga normal.
     // Debe llamarse directo desde un toque. Devuelve 'compartido' | 'descargado' | 'cancelado'.
@@ -208,7 +241,7 @@
       if (navigator.canShare && navigator.share) {
         let puede = false; try { puede = navigator.canShare({ files: [f] }); } catch (e) {}
         if (puede) {
-          try { await navigator.share({ files: [f], title: 'Respaldo Pableque Z' }); await this.marcarExportado(); return 'compartido'; }
+          try { await navigator.share({ files: [f], title: 'Respaldo Pableque Z' }); await this.marcarExportado(r); return 'compartido'; }
           catch (e) { if (e && e.name === 'AbortError') return 'cancelado'; }
         }
       }
@@ -216,10 +249,11 @@
       a.href = url; a.download = r.nombre; a.rel = 'noopener'; a.style.display = 'none';
       document.body.appendChild(a); a.click();
       setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 30000);
-      await this.marcarExportado();
+      await this.marcarExportado(r);
       return 'descargado';
     },
-    async marcarExportado() { E.ultimo = Date.now(); E.pedido = false; await ajuste('ultimo', E.ultimo); await ajuste('pedido', '0'); },
+    // Lo que se ve en pantalla (sin poder leer lo guardado) no cuenta como respaldo de tus datos: no se marca.
+    async marcarExportado(r) { if (r && r.visto) return; E.ultimo = Date.now(); E.pedido = false; await ajuste('ultimo', E.ultimo); await ajuste('pedido', '0'); },
     // Lee un archivo elegido por Pablo: .pzb (con frase) o estado.json en claro. Devuelve {tipo, estado}.
     async leerArchivo(archivo, frase) {
       if (archivo.size > 6 * 1024 * 1024) throw err('formato', 'El archivo es demasiado grande para ser un respaldo de Pableque Z.');
@@ -260,4 +294,4 @@
   window.EN_IPHONE = true;
 })();
 
-window.PZ_VERSION = '01-11-2026 16:54';
+window.PZ_VERSION = '02-11-2026 08:57';
