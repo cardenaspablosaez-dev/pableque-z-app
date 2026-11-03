@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-vtVv1h2Ehtv2B992JHBIKkFuCzdp0VANGoUa8l4592E='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-C76CS85MhlaCdzONIt5LgXirR3XBtrszcfCkj/DJX2w=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -1491,7 +1491,15 @@ const restaurar = x => Object.assign(S, clon(x));
 const it = id => S.items.find(x => x.id === id);
 const parte = x => x.sec === 'mutuo' ? x.valor * .7 : x.valor;
 const parteNio = x => x.sec === 'mutuo' ? x.valor * .3 : 0;
-const nioDe = n => Math.round(n * 3 / 10);   // v53r C19: 30% de Nio al peso en lo que se anota (tú = n − nioDe(n)); parte() y el plan siguen igual
+const nioDe = n => Math.round(n * 3 / 10);
+// v54a: reparto de un gasto anotado en una cuenta. Primero baja tu parte; solo lo que pasa de ella va a la parte de Nio que falta
+// (eso es lo que Nio te debe, menos lo que ya te adelantó); lo que pasa del total de la cuenta es tuyo.
+function repartoGasto(y, n) {
+  if (y.sec !== 'mutuo' || y.estado !== 'pendiente') return { tuyo: n, nioP: 0, usa: 0, debe: 0 };
+  const mio = Math.min(n, Math.max(y.queda || 0, 0)), e = n - mio, nioP = Math.min(e, Math.max(y.nioPend || 0, 0));
+  const usa = Math.min(y.nioAdel || 0, nioP);
+  return { tuyo: n - nioP, nioP, usa, debe: Math.round(nioP - usa) };
+}   // v53r C19: 30% de Nio al peso en lo que se anota (tú = n − nioDe(n)); parte() y el plan siguen igual
 const gastado = x => x.estado === 'pagado' ? parte(x) : Math.max(parte(x) - x.queda, 0);
 const SUBE_BASE = 0;
 // Mes en curso como número: marca si el sueldo de este mes ya está en el banco (así no se suma dos veces).
@@ -2375,9 +2383,9 @@ function efectoAnotar(n) {
         + (rp.sobra > .5 ? ` <b style="color:var(--rojo)">${peso(rp.sobra)} no calzan con ninguna cuenta compartida por pagar: entran a tu banco como plata extra.</b>` : '')) }; }
   if (A.tipo === 'ing') return { dif: r.dif + n, txt: `Entran <b>${peso(n)}</b> a tu banco` + (A.ing === 'sueldo' && sueldoYa() ? `<br><b style="color:var(--rojo)">Ya anotaste un sueldo de ${peso(sueldoAnotado())} este mes: este sería otro.</b>` : '') };
   if (A.donde === 'fuera') return { dif: r.dif - n, txt: `Gasto sorpresa: baja lo libre en <b>${peso(n)}</b>` };
-  const x = it(A.donde), tuyo = x.sec === 'mutuo' && (x.nioPend || x.estado === 'pagado') ? n - nioDe(n) : n, q = x.queda ?? 0, q2 = q - tuyo, exceso = Math.max(tuyo - Math.max(q, 0), 0);
-  const usa = x.sec === 'mutuo' && x.estado === 'pendiente' ? Math.min(x.nioAdel || 0, n - tuyo) : 0;   // su parte sale de lo que Nio ya adelantó
-  return { dif: r.dif - exceso - (n - tuyo) + usa, txt: `${x.n}: te quedan <b>${peso(q)}</b> → <b style="color:${q2 < 0 ? 'var(--rojo)' : 'inherit'}">${q2 < 0 ? 'te pasaste ' + peso(-q2) : peso(q2)}</b>${n - tuyo - usa > .5 ? `<br>Nio te devolverá ${peso(n - tuyo - usa)}` : ''}${usa > .5 ? `<br>Su parte (${peso(usa)}) sale de lo que Nio ya te adelantó` : ''}` };
+  const x = it(A.donde), g = repartoGasto(x, n), tuyo = g.tuyo, q = x.queda ?? 0, q2 = q - tuyo, exceso = Math.max(tuyo - Math.max(q, 0), 0), usa = g.usa;   // v54a
+  const tuParte = x.sec === 'mutuo' && x.estado === 'pendiente' && g.nioP < .5 ? '<br><span class="gris">Es tu gasto: va a tu 70% de esta cuenta. Nio no te debe nada por esto.</span>' : '';
+  return { dif: r.dif - exceso - (n - tuyo) + usa, txt: `${x.n}: te quedan <b>${peso(q)}</b> → <b style="color:${q2 < 0 ? 'var(--rojo)' : 'inherit'}">${q2 < 0 ? 'te pasaste ' + peso(-q2) : peso(q2)}</b>${g.debe > .5 ? `<br>Pasaste tu 70%: Nio te debe ${peso(g.debe)} de su 30%` : ''}${usa > .5 ? `<br>Su parte (${peso(usa)}) sale de lo que Nio ya te adelantó` : ''}${tuParte}` };
 }
 // v53r C22/C21: antes de guardar, pregunta lo que cambia la cuenta del mes siguiente.
 const sueldoNo = () => S.sueldoRecibido === -mesKey();   // dijiste que el sueldo no llegó este mes: no se vuelve a preguntar
@@ -2421,8 +2429,10 @@ function guardarAnotar() {
 function aplicarGasto(n, donde, detalle, id, hora) {
   const cuando = FECHA_HOY + ' · ' + hora;
   if (donde === 'fuera' || !it(donde)) { S.banco -= n; S.movs.unshift({ id, n: detalle || 'Gasto sorpresa', ic: 'sorpresa', monto: n, cuando, tipo: 'fuera', anot: true, nota: detalle ? 'gasto sorpresa · fuera del plan' : 'fuera del plan' }); return; }
-  const y = it(donde), tuyo = y.sec === 'mutuo' && (y.nioPend || y.estado === 'pagado') ? n - nioDe(n) : n; S.banco -= n; if (y.estado === 'pendiente') { y.queda = Math.round(y.queda - tuyo); if (y.sec === 'mutuo') y.nioPend = Math.max(Math.round((y.nioPend || 0) - (n - tuyo)), 0); } let usa = 0; if (y.sec === 'mutuo') { usa = y.estado === 'pendiente' ? Math.min(y.nioAdel || 0, n - tuyo) : 0; if (usa > 0) y.nioAdel = Math.round((y.nioAdel - usa) * 10) / 10; y.nio = Math.round((y.nio || 0) + n - tuyo - usa); }
-  S.movs.unshift({ id, n: y.n, ic: y.ic, item: y.id, monto: n, tuyo, cuando, tipo: 'plan', anot: true, nota: [detalle, n - tuyo - usa > .5 ? `Nio te devolverá ${peso(n - tuyo - usa)}` : '', usa > .5 ? `su parte (${peso(usa)}) salió de lo que Nio ya te adelantó` : ''].filter(Boolean).join(' · ') });
+  const y = it(donde), g = repartoGasto(y, n), tuyo = g.tuyo, usa = g.usa; S.banco -= n;   // v54a: tuyo hasta tu 70%; el exceso, de su 30%
+  if (y.estado === 'pendiente') { y.queda = Math.round(y.queda - tuyo); if (y.sec === 'mutuo') y.nioPend = Math.max(Math.round((y.nioPend || 0) - g.nioP), 0); }
+  if (y.sec === 'mutuo') { if (usa > 0) y.nioAdel = Math.round((y.nioAdel - usa) * 10) / 10; if (g.debe) y.nio = Math.round((y.nio || 0) + g.debe); }
+  S.movs.unshift({ id, n: y.n, ic: y.ic, item: y.id, monto: n, tuyo, cuando, tipo: 'plan', anot: true, nota: [detalle, g.debe > .5 ? `pasaste tu 70%: Nio te debe ${peso(g.debe)}` : y.sec === 'mutuo' ? 'tu gasto (tu 70%)' : '', usa > .5 ? `su parte (${peso(usa)}) salió de lo que Nio ya te adelantó` : ''].filter(Boolean).join(' · ') });
 }
 // Adelanto de Nio: lo que Nio paga de más queda en una cuenta compartida por pagar (sin tocar su 30% ni lo que sale al pagarla).
 const nioCabe = x => x.sec === 'mutuo' && x.estado === 'pendiente' ? Math.max((x.nioPend || 0) - (x.nioAdel || 0), 0) : 0;
