@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-C76CS85MhlaCdzONIt5LgXirR3XBtrszcfCkj/DJX2w=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-n3c1AIHxJ803N6HkwG+RzveyIIGRSxdGqeV/LAIFeIw='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -2870,6 +2870,14 @@ function aplicarGuardado(g) {
   // (por sección y no por id: en el iPhone las cuentas personales llegan con su id real solo en tus datos)
   S.items.forEach(x => { if (!x.cobro && (['luz', 'agua', 'tag', 'dividendo'].includes(x.id) || x.sec === 'tcnac' || x.sec === 'tcint')) x.cobro = 'variable'; });   // v53z Z1: + Dividendo
   // cuenta nueva (v53o): si tus datos no la tienen, entra pendiente este mes (el monto va aquí: el armado del iPhone deja ITEMS0 en cero)
+  // v54b: gastos anotados con la regla vieja (30% a Nio en el acto) pasan a la regla nueva: tuyos hasta tu 70% de la cuenta.
+  S.movs.slice().reverse().forEach(m => { if (!m || !m.anot || m.v54 || m.tipo !== 'plan' || !m.item) return; m.v54 = 1;
+    const y = S.items.find(x => x.id === m.item), d = Math.round((m.monto || 0) - (m.tuyo ?? m.monto ?? 0));
+    if (!y || y.sec !== 'mutuo' || d < 1 || /adelant/.test(m.nota || '') || (y.nio || 0) < d - .5) return;
+    const mio = y.estado === 'pendiente' ? Math.min(d, Math.max(y.queda || 0, 0)) : d; if (mio < 1) return;
+    if (y.estado === 'pendiente') { y.queda = Math.round(y.queda - mio); y.nioPend = Math.round((y.nioPend || 0) + mio); }
+    y.nio = Math.round(y.nio - mio); m.tuyo = Math.round((m.tuyo ?? 0) + mio);
+    m.nota = String(m.nota || '').replace(/Nio te devolverá \$[\d.]+/, mio >= d ? 'tu gasto (tu 70%)' : 'pasaste tu 70%: Nio te debe ' + peso(d - mio)); });
   if (!S.items.some(x => x.id === 'servtc')) S.items.push({ id: 'servtc', cobro: 'variable', n: 'Servicio tarjeta nacional', ic: 'tarjeta', sec: 'tcnac', cat: 'servicios', valor: 4120, estado: 'pendiente', queda: 4120 });
   S.depto = clon(DEPTO0).map(d => { const v = (g.depto || []).find(z => z.id === d.id); return v ? Object.assign(d, { pasos: (v.pasos || []).length === d.pasos.length && v.pasos.every(q => Array.isArray(q) && typeof q[0] === 'string') ? v.pasos.map(q => [q[0], !!q[1]]) : d.pasos.map(p => [p[0], (q => q ? !!q[1] : p[1])((v.pasos || []).find(q => q[0] === p[0]))]), monto: v.monto, arr: v.arr, gc: v.gc, fecha: v.fecha, aprox: v.aprox || d.aprox, sub: v.sub || d.sub, nota: v.nota || d.nota, arriendo: v.arriendo || d.arriendo, divPlan: v.divPlan || d.divPlan, subeDiv: v.subeDiv || d.subeDiv, subio: v.subio, trans: typeof v.trans === 'number' ? v.trans : undefined }) : d; });
   { const a = S.depto.find(z => z.id === 'arr'); if (a && a.arriendo > 0) ARRIENDO = a.arriendo; if (a && a.divPlan > 0) DIV_PLAN = a.divPlan; if (a && a.subeDiv > 0) DIV_SUBE = a.subeDiv; }
