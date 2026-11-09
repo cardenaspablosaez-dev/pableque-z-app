@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-S55DOxJrGFIGhpEzeUTloE3LUnL4mpDV8eZSlhpsOdU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-WeIALjckVjuUZlxwbzdyR8JsYN6zzm+mQhK8qpXYbdw='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -1643,6 +1643,7 @@ function pintarInicio() {
   let h = avisoDrive() + avI + recupera + `<div class="vineta"><h3>TU MES <span>${fechaPl()}${ojoMontos()}</span></h3>
    ${fila({ ic: 'cofre', n: 'Sueldo Restante', sub: 'lo que tienes en el banco' + (debe ? ' · sin lo de Nio' : ''), v: m(S.banco), vsub: debe ? 'con Nio ' + m(S.banco + r.nio) : '' })}
    ${fila({ ic: 'pergamino', n: 'Por pagar', sello: vacio ? '' : np ? sello('PENDIENTE', 'pe') : sello('NADA', 'ok'), sub: 'mutuos (tu 70%) + personales' + (r.extrasPend > .5 ? ' + extras' : '') + (gcPend() > .5 ? ' + gasto común' : '') + (r.adel > .5 ? ' + adelanto de Nio' : '') + (r.depR > .5 ? ' + lo del depósito de ' + mesN(1) : ''), v: m(r.pend), vsub: 'ver ›', acc: ' data-ir="pablo" data-ver="pend"' })}
+   ${vacio ? '' : fila({ ic: 'baston', n: 'Historial de gastos', sub: 'todo lo que anotaste y pagaste este mes', v: String(movsMes().length), vsub: 'ver ›', acc: ' data-movs="todo"' })}
    ${fila({ ic: 'nimbo', n: 'Diferencia', sello: vacio ? '' : sello('SE PUEDE GASTAR', 'ok'), sub: 'lo libre tras pagar todo' + (debe ? ' · sin lo de Nio' : ''), v: m(r.dif), vsub: debe ? 'con Nio ' + m(r.dif + r.nio) : '', color: 'verde', cls: 'f-grande' })}
    ${nioBloque(r, m)}
    ${sueldoYa() ? fila({ ic: 'zeni', n: 'Pago Sueldo', sello: sello('LLEGÓ', 'ok'), sub: 'ya está en tu banco: no se suma otra vez', v: m(S.pago) }) : fila({ ic: 'zeni', n: 'Pago Sueldo', sub: 'escribe tu próximo sueldo y todo se recalcula', v: pago })}
@@ -1926,19 +1927,22 @@ function cardGastos() {
   return `<div class="vineta"><h3>TUS GASTOS ANOTADOS <span class="num">${l.length ? peso(t) : ''}</span></h3>${l.length ? l.slice(0, 4).map(m => filaMov(m)).join('') : '<p class="vacio">Lo que anotes en DESEO › Gasté aparece aquí, con lo que compraste.</p>'}${l.length > 4 ? `<button class="ver-mas" data-movs="gastos">Ver los ${l.length} gastos ›</button>` : ''}</div>`;
 }
 function movsDe(k) {
+  if (k === 'todo') return movsMes();   // v54j: todo lo del mes, lo último primero
   if (k === 'gastos') return gastosAnot();
   if (k === 'mutuo') return movsMes().filter(esMutuo);
   if (k === 'nio') return [...S.movs.filter(m => m.tipo === 'ing' && m.n === 'Nio me pagó'), ...S.items.filter(x => (x.nioOk || 0) - (x.nioOkG || 0) > .5).map(x => ({ id: 'nok-' + x.id, pseudo: true, n: esc(x.n), ic: x.ic, monto: x.nioOk - (x.nioOkG || 0), tipo: 'ing', nota: 'te devolvió su 30%' }))];
   return movsMes().filter(m => m.tipo === 'fuera' || (m.tipo === 'ing' && m.n !== 'Nio me pagó') || (m.item && it(m.item) && it(m.item).sec !== 'mutuo'));
 }
-const TIT_MOVS = { gastos: 'TUS GASTOS ANOTADOS', pablo: 'TUS GASTOS PERSONALES Y SORPRESAS', mutuo: 'GASTADO EN LO COMPARTIDO', nio: 'LO QUE NIO TE TRANSFIRIÓ' };
+const TIT_MOVS = { todo: 'HISTORIAL DEL MES', gastos: 'TUS GASTOS ANOTADOS', pablo: 'TUS GASTOS PERSONALES Y SORPRESAS', mutuo: 'GASTADO EN LO COMPARTIDO', nio: 'LO QUE NIO TE TRANSFIRIÓ' };
 function cardMovs(k, vacio) {
   const l = movsDe(k), fil = k === 'nio' ? filaNioPago : m => filaMov(m, k === 'mutuo'), sal = l.filter(m => m.tipo !== 'ing').reduce((t, m) => t + m.monto, 0), ent = l.filter(m => m.tipo === 'ing').reduce((t, m) => t + m.monto, 0);
   return `<div class="vineta"><h3>${TIT_MOVS[k]} <span class="num">${l.length ? (k === 'nio' ? '+' + peso(ent) : peso(sal)) : ''}</span></h3>${l.length ? l.slice(0, 5).map(fil).join('') : `<p class="vacio">${vacio}</p>`}${l.length > 5 ? `<button class="ver-mas" data-movs="${k}">Ver los ${l.length} movimientos ›</button>` : ''}</div>`;
 }
 function hojaMovs(k) {
   const l = movsDe(k), fil = k === 'nio' ? filaNioPago : m => filaMov(m, k === 'mutuo');
-  abrirHoja(TIT_MOVS[k].charAt(0) + TIT_MOVS[k].slice(1).toLowerCase(), `<div class="mov-lista">${l.map(fil).join('')}</div>`, k === 'nio' ? 'corazon' : 'pergamino');
+  const sal = l.filter(m => m.tipo !== 'ing').reduce((t, m) => t + m.monto, 0), ent = l.filter(m => m.tipo === 'ing').reduce((t, m) => t + m.monto, 0);   // v54j
+  abrirHoja(TIT_MOVS[k].charAt(0) + TIT_MOVS[k].slice(1).toLowerCase(), (k === 'todo' ? `<p class="sub">${l.length} ${l.length === 1 ? 'movimiento' : 'movimientos'} · salieron <b>${peso(sal)}</b>${ent > .5 ? ` · entraron <b>${peso(ent)}</b>` : ''}. Toca uno para ver el detalle.</p>` : '')
+    + `<div class="mov-lista"${k === 'todo' ? ' style="margin-top:10px"' : ''}>${l.map(fil).join('') || '<p class="vacio">Aún no hay movimientos este mes.</p>'}</div>`, k === 'nio' ? 'corazon' : 'pergamino');
 }
 // Gráfico de %: la esfera de cada uno, la barra y lo que falta.
 const KI = '<i class="ki"></i>'.repeat(7);
@@ -2394,7 +2398,7 @@ function pintarDeseo(nuevo) {
   const c = $('#d-cuerpo'); if (!c) return;
   const hoyL = S.movs.filter(m => esHoy(m) && m.tipo !== 'ing'), gH = hoyL.reduce((t, m) => t + m.monto, 0);
   const hoy = `Hoy llevas ${peso(gH)}${hoyL.length ? ` en ${hoyL.length} ${hoyL.length === 1 ? 'registro' : 'registros'}` : ''} · ver ›`;
-  if (nuevo || !c.firstChild) { c.innerHTML = `${cajaRagnar()}<div class="vineta"><h3>ANOTAR <span>LO HACES TÚ</span></h3>${TIPOS.map(([k, t, ic, d]) => fila({ ic, n: t, sub: d, v: '<span class="fl">›</span>', acc: ` data-at="${k}"` })).join('')}</div>${window.EN_IPHONE ? vinetaRespaldo() : ''}<button class="hoy-sutil" data-accion="hoy" id="d-hoy">${hoy}</button>`; pintarChat(); }
+  if (nuevo || !c.firstChild) { c.innerHTML = `${cajaRagnar()}<div class="vineta"><h3>ANOTAR <span>LO HACES TÚ</span></h3>${TIPOS.map(([k, t, ic, d]) => fila({ ic, n: t, sub: d, v: '<span class="fl">›</span>', acc: ` data-at="${k}"` })).join('')}</div>${window.EN_IPHONE ? vinetaRespaldo() : ''}<div class="vineta"><h3>HISTORIAL <span>ESTE MES</span></h3>${fila({ ic: 'baston', n: 'Historial de gastos', sub: 'todo lo que anotaste y pagaste', v: '<span class="fl">›</span>', acc: ' data-movs="todo"' })}</div><button class="hoy-sutil" data-accion="hoy" id="d-hoy">${hoy}</button>`; pintarChat(); }
   else { const h = $('#d-hoy'); if (h) h.textContent = hoy; }
 }
 function hojaAnotar(tipo, ing) {
@@ -2744,6 +2748,9 @@ document.addEventListener('click', e => {
     case 'depto': return hojaDeptoTodo();
     case 'calculo': return hojaCalculo();
     case 'hoy': return hojaHoy();
+    case 'ord-pegar': return pegarOrdenes();   // v54j
+    case 'ord-leer': return hojaOrdenes(($('#ord-in') || {}).value || '');
+    case 'ord-ok': return aplicarOrdenesOk();
     case 'planilla': return traerPlanilla(true);
     case 'ritmo': return hojaRitmo();
     case 'pago': return hojaPago();
@@ -3021,9 +3028,81 @@ ANOTAR: tú SÍ anotas en la app. Cuando Pablo diga que gastó, pagó o compró 
 
 DATOS DE SU PLANILLA:
 `;
+// ---------- v54j: Órdenes de Ragnar (Ragnar las manda por el chat; Pablo las copia y las pega aquí) ----------
+const normT = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+const ORD = { txt: '', o: null };
+function leerOrdenes(txt) {
+  const L = String(txt || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean), cab = L.find(l => normT(l).includes('ordenes de ragnar'));
+  if (!cab) return null;
+  const im = normT(cab).match(/id\s*[:#]?\s*([a-z0-9-]+)/), oid = im ? im[1] : 'sin-id';
+  const l = L.filter(z => z !== cab && z.includes('|')).map(z => { const q = z.split('|').map(w => w.trim()), t = normT(q[0]);
+    if (t === 'cerrar') return { tipo: 'cerrar', cuenta: q[1] || '', n: soloNum(q[2] || ''), et: 'Cerrar ' + (q[1] || '') };
+    if (t === 'gasto') return { tipo: 'gasto', cuenta: q[1] || '', det: String(q[2] || '').replace(/\s+/g, ' ').slice(0, 60), n: soloNum(q[3] || ''), et: (normT(q[1]) === 'sorpresa' ? 'Gasto sorpresa' : 'Gasto en ' + (q[1] || '')) + (q[2] ? ' · ' + q[2] : '') };
+    if (t === 'valor') return { tipo: 'valor', cuenta: q[1] || '', n: soloNum(q[2] || ''), et: 'Valor de ' + (q[1] || '') };
+    return { tipo: '?', et: z, err: 'no entiendo esta línea' }; });
+  return { id: oid, l, ya: S.movs.some(m => m.ord === oid) };
+}
+const cuentaOrd = n => { const k = normT(n); return S.items.find(x => normT(x.n) === k || x.id === k) || null; };
+function ponerValor(x, n) {   // igual que «CAMBIAR EL VALOR»
+  const dP = (x.sec === 'mutuo' ? .7 : 1) * (n - x.valor), dN = x.sec === 'mutuo' ? .3 * (n - x.valor) : 0; x.valor = n;
+  if (x.estado === 'pendiente') { x.queda = Math.round((x.queda + dP) * 10) / 10; if (x.sec === 'mutuo') x.nioPend = Math.round(((x.nioPend || 0) + dN) * 10) / 10; }
+  if (x.sec === 'mutuo' && x.estado === 'pendiente') ajustar70(x); if (x.sec === 'mutuo') moverAdelSobra(x);
+}
+// Aplica las órdenes una tras otra sobre lo que hay ahora (así «gasto en Gas» y luego «cerrar Gas» calzan). Devuelve qué hizo cada una.
+function aplicarOrdenes(l, oid) {
+  const hora = horaAhora(), cuando = FECHA_HOY + ' · ' + hora, n0 = S.movs.length, res = [];
+  l.forEach((o, i) => { const id = 'o' + Date.now() + '-' + i, mal = e => res.push({ o, err: e });
+    if (o.err) return mal(o.err);
+    if (!(o.n > 0) && !(o.tipo === 'valor' && o.n === 0)) return mal('falta el monto');
+    if (o.tipo === 'gasto') {
+      if (normT(o.cuenta) === 'sorpresa') { aplicarGasto(o.n, 'fuera', o.det, id, hora); return res.push({ o, txt: `sale ${peso(o.n)} de tu banco (de tu diferencia)` }); }
+      const x = cuentaOrd(o.cuenta); if (!x) return mal(`no encuentro la cuenta «${esc(o.cuenta)}»`);
+      aplicarGasto(o.n, x.id, o.det, id, hora); return res.push({ o, txt: `sale ${peso(o.n)} de tu banco · va a ${esc(x.n)}` }); }
+    if (o.tipo === 'cerrar') { const x = cuentaOrd(o.cuenta); if (!x) return mal(`no encuentro la cuenta «${esc(o.cuenta)}»`);
+      if (x.estado !== 'pendiente') return x.cobroTotal && Math.abs((x.cobrado || 0) - o.n) < 1 ? res.push({ o, txt: `ya estaba cerrada en ${peso(o.n)}: sin cambios` }) : mal(`${esc(x.n)} ya está pagada`);
+      const f = filaPg('i:' + x.id), mut = x.sec === 'mutuo';
+      if (f && f.tot) { if (o.n < f.minT - .5) return mal(`el total no puede ser menos de lo que ya pagaste (${peso(f.minT)})`);
+        const k = pagarTotal(x.id, o.n, cuando); return res.push({ o, txt: `total ${peso(o.n)}${mut ? ` · tu 70% ${peso(.7 * o.n)} · Nio 30% ${peso(.3 * o.n)}` : ''} · ${k.sale > .5 ? 'salen ' + peso(k.sale) + ' de tu banco' : 'no sale nada más de tu banco'}` }); }
+      pagarItem(x.id, f && Math.abs(o.n - f.pres) >= 1 ? o.n : null, cuando); return res.push({ o, txt: `pagada con ${peso(o.n)}${mut ? ` · Nio te devuelve su 30%` : ''}` }); }
+    if (o.tipo === 'valor') { const x = cuentaOrd(o.cuenta), e = x ? null : EXTRAS.find(z => normT(z[0]) === normT(o.cuenta));
+      if (!x && !e) return mal(`no encuentro «${esc(o.cuenta)}»`);
+      if (e) { e[1] = o.n; return res.push({ o, txt: `${esc(e[0])} pasa a ${peso(o.n)}` }); }
+      if (x.sec === 'auto') return mal(`${esc(x.n)} es automática: su valor es fijo`);
+      if (x.estado !== 'pendiente') return mal(`${esc(x.n)} ya está pagada: primero vuelve a pendiente`);
+      ponerValor(x, o.n); return res.push({ o, txt: `pasa a ${peso(o.n)}${x.sec === 'mutuo' ? ` · tu 70% ${peso(.7 * o.n)} · Nio 30% ${peso(.3 * o.n)}` : ''}` }); }
+    return mal('no entiendo esta línea'); });
+  S.movs.slice(0, Math.max(S.movs.length - n0, 0)).forEach(m => { m.ord = oid; });
+  return res;
+}
+function simularOrdenes(o) {
+  const antes = instante(), r0 = calc(), b0 = S.banco;
+  try { const res = aplicarOrdenes(o.l, o.id), r1 = calc(); return { res, banco0: b0, banco1: S.banco, nio0: r0.nio, nio1: r1.nio, dif0: r0.dif, dif1: r1.dif }; }
+  finally { restaurar(antes); }
+}
+async function pegarOrdenes() {
+  let t = ''; try { if (navigator.clipboard && navigator.clipboard.readText) t = await navigator.clipboard.readText(); } catch (e) {}
+  if (leerOrdenes(t)) return hojaOrdenes(t);
+  abrirHoja('Órdenes de Ragnar', `<p class="sub">Pega aquí el bloque que te mandé por el chat: mantén presionado el recuadro › Pegar.</p><textarea id="ord-in" rows="7" autocomplete="off" style="width:100%;box-sizing:border-box;font:16px/1.4 inherit;margin-top:10px;padding:10px;border:2px solid #C9C2B4;border-radius:6px;background:#fff" placeholder="ÓRDENES DE RAGNAR · id …"></textarea><button class="btn ancho" data-accion="ord-leer" style="margin-top:12px">REVISAR LAS ÓRDENES</button>`, 'pergamino');
+}
+function hojaOrdenes(t) {
+  const o = leerOrdenes(t); if (!o) return hojaMensaje('Eso no son órdenes', 'Lo que pegaste no trae la línea «ÓRDENES DE RAGNAR». Copia el bloque completo que te mandé por el chat.');
+  ORD.txt = t; ORD.o = o; const s = simularOrdenes(o), malas = s.res.filter(z => z.err), n = s.res.length;
+  let h = o.ya ? `<p class="nota" style="margin-top:0">Estas órdenes (${esc(o.id)}) ya las aplicaste: si las aplicas otra vez, se anotan dos veces.</p>` : `<p class="sub">Revisa lo que voy a hacer. Nada cambia hasta que toques APLICAR.</p>`;
+  h += `<div class="mov-lista" style="margin-top:10px">${s.res.map(z => fila({ ic: z.err ? 'sorpresa' : z.o.tipo === 'gasto' ? 'baston' : 'pergamino', n: esc(z.o.et || ''), sello: z.err ? sello('REVISAR', 'pe') : sello('OK', 'ok'), sub: z.err || z.txt, v: z.o.n > 0 ? peso(z.o.n) : '' })).join('')}</div>`;
+  h += `<div class="previa" id="ord-prev">Tu banco: <b>${peso(s.banco0)}</b> → <b>${peso(s.banco1)}</b><br>Nio te debe: <b>${peso(Math.max(s.nio0, 0))}</b> → <b>${peso(Math.max(s.nio1, 0))}</b><br>Libre para gastar: <b>${peso(s.dif0)}</b> → <b>${peso(s.dif1)}</b></div>`;
+  h += malas.length ? `<p class="nota">${malas.length === 1 ? 'Una línea tiene' : malas.length + ' líneas tienen'} un problema: no apliqué nada. Pídeme el bloque corregido.</p>`
+    : `<div class="accion-fija"><button class="btn ancho" data-accion="ord-ok">APLICAR ${n} ${n === 1 ? 'ORDEN' : 'ÓRDENES'}</button></div>`;
+  abrirHoja('Órdenes de Ragnar', h, 'pergamino');
+}
+function aplicarOrdenesOk() {
+  const o = ORD.o; if (!o) return cerrarHoja();
+  const s = simularOrdenes(o); if (s.res.some(z => z.err)) return hojaOrdenes(ORD.txt);
+  ORD.o = null; celebrar('¡DESEO CUMPLIDO!');
+  cambiar(`Listo: apliqué ${s.res.length} ${s.res.length === 1 ? 'orden' : 'órdenes'} de Ragnar. Las ves en Historial de gastos.`, () => { aplicarOrdenes(o.l, o.id); });
+}
 function cajaRagnar() {
   const tit = `<h3><span class="rg-tit">${FOTO.shenron ? `<img class="rg-ava" src="${FOTO.shenron}" alt="">` : ''}PIDE TU DESEO</span><span>A RAGNAR, TU DRAGÓN</span></h3>`;
-  if (!samp) return `<div class="vineta rg">${tit}<p class="pie" style="border-top:0">Ragnar no ve los datos de esta app: viven solo en tu iPhone. Para conversar, escríbele a Ragnar en Telegram (te responde con el PC encendido).</p></div>`;
+  if (!samp) return `<div class="vineta rg">${tit}<p class="pie" style="border-top:0">Pídeme por el chat lo que quieras anotar o corregir. Te mando un bloque «Órdenes de Ragnar»: lo copias y aquí lo pegas.</p><div style="padding:0 14px 14px"><button class="btn ancho" data-accion="ord-pegar">PEGAR ÓRDENES DE RAGNAR</button></div></div>`;   // v54j
   return `<div class="vineta rg">${tit}
    <div class="chat-lista" id="chat-lista" aria-live="polite"></div><button type="button" class="chat-nuevo" id="chat-nuevo" hidden>↺ Empezar de nuevo</button>
    <form class="chat-caja" id="chat-form"><textarea id="chat-in" rows="2" placeholder="¡Sal, Ragnar, y concédeme mi deseo!" aria-label="Mensaje para Ragnar" enterkeyhint="send"></textarea><button class="pedir2 radar" id="chat-env" type="submit" aria-label="Pedir"><span class="p2-radar">${radarPedir()}</span><span class="p2-t">PEDIR</span></button></form>
