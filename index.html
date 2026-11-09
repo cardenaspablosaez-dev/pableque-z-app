@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-WeIALjckVjuUZlxwbzdyR8JsYN6zzm+mQhK8qpXYbdw='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-XOgZMuLNILR/dvmOW/0bvqg4qD7Unfk0kc5MmGLndaQ='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -993,6 +993,7 @@ html :is(.num,.v2,.v2 *,.hoja-big,.previa b,.lin b,#i-pago,#pg-pantalla,#an-pant
 /* v53z Z2: montos ocultos (borrosos) fuera de las hojas; el ojo los muestra */
 body.montos-ocultos :is(.num,.v2,.mto,.hoja-big,.cv,.av-det,#i-pago):not(#hoja *):not(:focus){filter:blur(7px);-webkit-user-select:none;user-select:none}
 body.montos-ocultos .ojo-montos,body.montos-ocultos .ojo-montos *{filter:none!important}
+body.montos-ocultos .v2:has(> .fl){filter:none!important}   /* v54k: la flecha no es un monto */
 .ojo-montos{margin-left:8px;vertical-align:middle;display:inline-grid!important;place-items:center;width:32px;height:32px;border:2px solid var(--borde);border-radius:50%;background:var(--oro);flex:none;touch-action:manipulation}
 .ojo-montos svg{width:17px;height:17px}
 .ojo-montos:active{transform:scale(.94)}
@@ -1643,7 +1644,7 @@ function pintarInicio() {
   let h = avisoDrive() + avI + recupera + `<div class="vineta"><h3>TU MES <span>${fechaPl()}${ojoMontos()}</span></h3>
    ${fila({ ic: 'cofre', n: 'Sueldo Restante', sub: 'lo que tienes en el banco' + (debe ? ' · sin lo de Nio' : ''), v: m(S.banco), vsub: debe ? 'con Nio ' + m(S.banco + r.nio) : '' })}
    ${fila({ ic: 'pergamino', n: 'Por pagar', sello: vacio ? '' : np ? sello('PENDIENTE', 'pe') : sello('NADA', 'ok'), sub: 'mutuos (tu 70%) + personales' + (r.extrasPend > .5 ? ' + extras' : '') + (gcPend() > .5 ? ' + gasto común' : '') + (r.adel > .5 ? ' + adelanto de Nio' : '') + (r.depR > .5 ? ' + lo del depósito de ' + mesN(1) : ''), v: m(r.pend), vsub: 'ver ›', acc: ' data-ir="pablo" data-ver="pend"' })}
-   ${vacio ? '' : fila({ ic: 'baston', n: 'Historial de gastos', sub: 'todo lo que anotaste y pagaste este mes', v: String(movsMes().length), vsub: 'ver ›', acc: ' data-movs="todo"' })}
+   ${vacio ? '' : fila({ ic: 'baston', n: 'Historial de gastos', sub: `${movsMes().length} movimientos este mes · toca para verlos`, v: '<span class="fl">›</span>', acc: ' data-movs="todo"' })}
    ${fila({ ic: 'nimbo', n: 'Diferencia', sello: vacio ? '' : sello('SE PUEDE GASTAR', 'ok'), sub: 'lo libre tras pagar todo' + (debe ? ' · sin lo de Nio' : ''), v: m(r.dif), vsub: debe ? 'con Nio ' + m(r.dif + r.nio) : '', color: 'verde', cls: 'f-grande' })}
    ${nioBloque(r, m)}
    ${sueldoYa() ? fila({ ic: 'zeni', n: 'Pago Sueldo', sello: sello('LLEGÓ', 'ok'), sub: 'ya está en tu banco: no se suma otra vez', v: m(S.pago) }) : fila({ ic: 'zeni', n: 'Pago Sueldo', sub: 'escribe tu próximo sueldo y todo se recalcula', v: pago })}
@@ -1761,7 +1762,7 @@ function pagarTotal(id, T, cuando) {
   S.banco -= sale; y.nioPend = 0; y.estado = 'pagado'; y.queda = 0; delete y.pasado;
   const d = r10(T - vm); y.cobrado = r10(T); y.cobroTotal = true; y.cobroDif = d; y.cobroTuyo = r10(mut ? .7 * d : d);
   S.movs.unshift({ id: 'p' + Date.now() + y.id, n: y.n, ic: y.ic, item: y.id, monto: Math.round(sale), sale, tuyo: antes.queda, antes, nioTras: y.nio || 0, total: r10(T), cuando: cuando || FECHA_HOY + ' · ' + horaAhora(), tipo: 'plan',
-    nota: [`salió ${peso(T)} en total`, ya > .5 ? `ya habías pagado ${peso(ya)}` : '', mut ? `tu 70% ${peso(.7 * T)} · Nio 30% ${peso(.3 * T)}` : '', (y.nio || 0) > .5 ? `Nio te debe ${peso(y.nio)}` : '', (y.debes || 0) > .5 ? `le debes a Nio ${peso(y.debes)}` : ''].filter(Boolean).join(' · ') });
+    nota: [`salió ${peso(T)} en total`, ya > .5 ? `ya habías pagado ${peso(ya)}` : '', mut ? `tu 70% ${peso(.7 * T)} · Nio 30% ${peso(.3 * T)}` : '', (y.nio || 0) > .5 ? (dNio > .5 && antes.nio > .5 ? `Nio te debe ${peso(dNio)} más: en total ${peso(y.nio)} de esta cuenta` : `Nio te debe ${peso(y.nio)}`) : '', (y.debes || 0) > .5 ? `le debes a Nio ${peso(y.debes)}` : ''].filter(Boolean).join(' · ') });
   return { sale, d, suma: dNio, ad, tot: true, T: r10(T) };
 }
 // Paga un extra: los de Nio se descuentan de lo que ella te debe (no salen del banco).
@@ -2398,7 +2399,7 @@ function pintarDeseo(nuevo) {
   const c = $('#d-cuerpo'); if (!c) return;
   const hoyL = S.movs.filter(m => esHoy(m) && m.tipo !== 'ing'), gH = hoyL.reduce((t, m) => t + m.monto, 0);
   const hoy = `Hoy llevas ${peso(gH)}${hoyL.length ? ` en ${hoyL.length} ${hoyL.length === 1 ? 'registro' : 'registros'}` : ''} · ver ›`;
-  if (nuevo || !c.firstChild) { c.innerHTML = `${cajaRagnar()}<div class="vineta"><h3>ANOTAR <span>LO HACES TÚ</span></h3>${TIPOS.map(([k, t, ic, d]) => fila({ ic, n: t, sub: d, v: '<span class="fl">›</span>', acc: ` data-at="${k}"` })).join('')}</div>${window.EN_IPHONE ? vinetaRespaldo() : ''}<div class="vineta"><h3>HISTORIAL <span>ESTE MES</span></h3>${fila({ ic: 'baston', n: 'Historial de gastos', sub: 'todo lo que anotaste y pagaste', v: '<span class="fl">›</span>', acc: ' data-movs="todo"' })}</div><button class="hoy-sutil" data-accion="hoy" id="d-hoy">${hoy}</button>`; pintarChat(); }
+  if (nuevo || !c.firstChild) { c.innerHTML = `${cajaRagnar()}<div class="vineta"><h3>HISTORIAL <span>ESTE MES</span></h3>${fila({ ic: 'baston', n: 'Historial de gastos', sub: `${movsMes().length} movimientos · todo lo que anotaste y pagaste`, v: '<span class="fl">›</span>', acc: ' data-movs="todo"' })}</div><div class="vineta"><h3>ANOTAR <span>LO HACES TÚ</span></h3>${TIPOS.map(([k, t, ic, d]) => fila({ ic, n: t, sub: d, v: '<span class="fl">›</span>', acc: ` data-at="${k}"` })).join('')}</div>${window.EN_IPHONE ? vinetaRespaldo() : ''}<button class="hoy-sutil" data-accion="hoy" id="d-hoy">${hoy}</button>`; pintarChat(); }
   else { const h = $('#d-hoy'); if (h) h.textContent = hoy; }
 }
 function hojaAnotar(tipo, ing) {
@@ -2811,7 +2812,7 @@ function avisoIphone() {
   const txt = i.pedido ? 'Guarda un respaldo cifrado ahora y no pierdes nada.' : i.ultimo ? `Hace ${n} días que no guardas uno.` : `Llevas ${n} días usando la app sin respaldo.`;
   return `<div class="aviso-drive" id="aviso-iphone"><b>Haz tu respaldo</b><p>${txt} Tus datos viven solo en este iPhone: si borras el ícono o iOS limpia la app, el archivo es lo que te los devuelve.</p><div class="ad-b"><button class="btn" data-accion="resp-exportar">HACER RESPALDO</button></div></div>`;
 }
-const PZ_APP = '53';   // v53t: número de versión que ve Pablo en Deseo › Respaldo (la fecha la pone el armado)
+const PZ_APP = '54';   // v53t: número de versión que ve Pablo en Deseo › Respaldo (la fecha la pone el armado)
 function vinetaRespaldo() {
   if (!IPH()) return '';
   const i = PablequeRespaldo.info();
