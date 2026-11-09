@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-3VcMMeoi6qGWrlNAUTDOFMNft8PjAb8887pyYqCTk8I=' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-cO68T45UnTmR7zk3rtu2OJgmYNIei38oFqlDS4zFo6w='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -2754,7 +2754,7 @@ document.addEventListener('click', e => {
     case 'canal-conectar': return canalConectar();   // v54m
     case 'canal-ok': return cerrarHoja();
     case 'canal-deshacer': return canalDeshacer();
-    case 'canal-nueva': canalLs(z => z.removeItem('pz_canal')); return canalConectar();   // v54n: clave nueva
+    case 'canal-nueva': canalLs(z => { z.removeItem('pz_canal'); z.removeItem('pz_canal_ok'); }); return canalConectar();   // v54n: clave nueva
     case 'ord-leer': return hojaOrdenes(($('#ord-in') || {}).value || '');
     case 'ord-ok': return aplicarOrdenesOk();
     case 'planilla': return traerPlanilla(true);
@@ -3131,6 +3131,7 @@ function cajaCanal() {   // v54n: la caja de Inicio dice el estado real del cana
   if (!enInicioIphone()) return `<div class="aviso-drive" id="aviso-ord"><b>Ragnar anota por ti</b><p>Cuando abras Pableque Z desde su ícono, conéctala una vez con Ragnar y lo que le pidas por el chat se anota solo.</p></div>`;
   if (!canalClave()) return `<div class="aviso-drive" id="aviso-ord"><b>Conecta tu app con Ragnar</b><p>Una sola vez: toca CONECTAR y pega en el chat con Ragnar lo que se copia. Desde ahí lo que le pidas se anota solo aquí.</p><div class="ad-b"><button class="btn" data-accion="canal-conectar">CONECTAR CON RAGNAR</button><button class="btn" data-accion="ord-pegar" style="background:var(--crema)">PEGAR ÓRDENES</button></div></div>`;
   if (typeof CANAL !== 'object' || !CANAL) return '';
+  if (canalLs(z => z.getItem('pz_canal_ok')) !== '1') return `<div class="aviso-drive" id="aviso-ord"><b>Falta un paso: manda tu clave a Ragnar</b><p>Tu clave ya está creada en este iPhone, pero Ragnar todavía no la tiene. Toca COPIAR MI CLAVE y pégala en el chat con Ragnar en la app de Claude. Cuando llegue su primer pedido, aquí dirá «Conectado».</p><div class="ad-b"><button class="btn" data-accion="canal-conectar">COPIAR MI CLAVE</button><button class="btn" data-accion="ord-pegar" style="background:var(--crema)">PEGAR ÓRDENES</button></div></div>`;   // v54p
   if (CANAL.ilegible) return `<div class="aviso-drive" id="aviso-ord"><b>Hay pedidos de Ragnar que no pude leer</b><p>La clave de este iPhone cambió. Toca CONECTAR DE NUEVO y pega en el chat con Ragnar la clave nueva.</p><div class="ad-b"><button class="btn" data-accion="canal-nueva">CONECTAR DE NUEVO</button></div></div>`;
   const desh = CANAL.antes && CANAL.ev === EV ? `<div class="ad-b"><button class="btn" data-accion="canal-deshacer" style="background:var(--crema)">DESHACER LO DE RAGNAR</button></div>` : '';
   return `<div class="aviso-drive" id="aviso-ord"><b>Conectado con Ragnar ✓</b><p>Lo que le pidas por el chat se anota solo cuando abres la app.${CANAL.ult ? ` Última revisión: ${CANAL.ult}${desh ? ' · anotó tu último pedido' : ' · sin pedidos nuevos'}.` : ''}</p>${desh}</div>`;
@@ -3158,7 +3159,7 @@ async function revisarCanal() {
     const j = await r.json(), clave = await crypto.subtle.importKey('raw', deLetras(k), 'AES-GCM', false, ['decrypt']), lst = j.lista || [];
     let leidas = 0; CANAL.ult = horaAhora();
     for (const e of lst) {
-      let t; try { t = new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deLetras(e.iv) }, clave, deLetras(e.d))); leidas++; } catch (_) { continue; }
+      let t; try { t = new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deLetras(e.iv) }, clave, deLetras(e.d))); leidas++; canalLs(z => z.setItem('pz_canal_ok', '1')); } catch (_) { continue; }
       const o = leerOrdenes(t); if (!o || o.ya || ordHechas().includes(o.id) || CANAL.visto[o.id]) continue;
       if (canalOcupadoPantalla()) { setTimeout(revisarCanal, 3000); return; }   // no interrumpe lo que estás haciendo
       CANAL.visto[o.id] = true;
@@ -3170,7 +3171,7 @@ async function revisarCanal() {
       marcarHecha(o.id); CANAL.antes = antes; CANAL.ev = EV; repintar();   // v54n: hecha solo después de guardar
       return hojaCanal(o, sm);   // una tanda a la vez; la siguiente llega al volver a la app
     }
-    CANAL.ilegible = lst.length > 0 && leidas === 0; repintar();
+    CANAL.ilegible = lst.length > 0 && leidas === 0 && canalLs(z => z.getItem('pz_canal_ok')) === '1'; repintar();
   } catch (_) {} finally { CANAL.ocupado = false; }
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(revisarCanal, 800); });
