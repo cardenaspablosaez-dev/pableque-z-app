@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-F/1CrV+2y6B5BdOSczpsIF5rFyNaHwlZD0FSsuGaWbM=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-9vzSmpgoEbKDD3YIT8lz06bYZJc7EDADqnrPukGWUzg=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -1641,8 +1641,7 @@ function pintarInicio() {
   // v53u C31: todo en $0 (sin banco, movimientos ni historial) = este iPhone perdió lo guardado: botón para traerlo y sin sellos.
   const avI = avisoIphone(), vacio = !Math.round(S.banco) && !S.movs.length && !(S.historial || []).length;
   const recupera = vacio && IPH() && !avI.includes('resp-importar') ? `<div class="aviso-drive" id="aviso-vacio"><b>Recupera tus datos</b><p>Todo está en $0: parece que este iPhone perdió lo guardado. Trae tu último respaldo y todo vuelve como estaba.</p><div class="ad-b"><button class="btn" data-accion="resp-importar">IMPORTAR RESPALDO</button></div></div>` : '';
-  const ordI = samp ? '' : canalClave() ? `<div class="aviso-drive" id="aviso-ord"><b>Conectado con Ragnar ✓</b><p>Lo que me pidas por el chat se anota solo cuando abres la app.</p></div>`
-    : `<div class="aviso-drive" id="aviso-ord"><b>Conecta tu app con Ragnar</b><p>Una sola vez: toca CONECTAR y pega en el chat lo que se copia. Desde ahí lo que me pidas se anota solo aquí.</p><div class="ad-b"><button class="btn" data-accion="canal-conectar">CONECTAR CON RAGNAR</button><button class="btn" data-accion="ord-pegar" style="background:var(--crema)">PEGAR ÓRDENES</button></div></div>`;   // v54l + v54m
+  const ordI = samp ? '' : cajaCanal();   // v54l + v54m + v54n
   let h = avisoDrive() + avI + recupera + ordI + `<div class="vineta"><h3>TU MES <span>${fechaPl()}${ojoMontos()}</span></h3>
    ${fila({ ic: 'cofre', n: 'Sueldo Restante', sub: 'lo que tienes en el banco' + (debe ? ' · sin lo de Nio' : ''), v: m(S.banco), vsub: debe ? 'con Nio ' + m(S.banco + r.nio) : '' })}
    ${fila({ ic: 'pergamino', n: 'Por pagar', sello: vacio ? '' : np ? sello('PENDIENTE', 'pe') : sello('NADA', 'ok'), sub: 'mutuos (tu 70%) + personales' + (r.extrasPend > .5 ? ' + extras' : '') + (gcPend() > .5 ? ' + gasto común' : '') + (r.adel > .5 ? ' + adelanto de Nio' : '') + (r.depR > .5 ? ' + lo del depósito de ' + mesN(1) : ''), v: m(r.pend), vsub: 'ver ›', acc: ' data-ir="pablo" data-ver="pend"' })}
@@ -2755,6 +2754,7 @@ document.addEventListener('click', e => {
     case 'canal-conectar': return canalConectar();   // v54m
     case 'canal-ok': return cerrarHoja();
     case 'canal-deshacer': return canalDeshacer();
+    case 'canal-nueva': canalLs(z => z.removeItem('pz_canal')); return canalConectar();   // v54n: clave nueva
     case 'ord-leer': return hojaOrdenes(($('#ord-in') || {}).value || '');
     case 'ord-ok': return aplicarOrdenesOk();
     case 'planilla': return traerPlanilla(true);
@@ -3108,7 +3108,7 @@ function aplicarOrdenesOk() {
 }
 // v54m: canal privado con Ragnar. La clave se crea en este iPhone; solo la tiene Ragnar en el PC de Pablo.
 // Ragnar sube sus órdenes CIFRADAS a ordenes.json; la app las trae al abrirse, revisa que calcen y las anota sola.
-const CANAL = { ocupado: false, visto: {}, antes: null, n: 0 };
+var CANAL = { ocupado: false, visto: {}, antes: null, n: 0, ev: -1, ult: '', ilegible: false };
 const LETRAS = 'bcdfghjklmnpqrst';   // 16 letras sin vocales ni números: lo cifrado nunca parece una palabra o una cifra
 function canalLs(f) { try { return f(localStorage); } catch (e) { return null; } }
 function canalClave() { return canalLs(z => z.getItem('pz_canal')); }   // función (no const): Inicio la usa al pintar
@@ -3117,21 +3117,31 @@ function deLetras(t) { t = String(t || '').split('').filter(c => LETRAS.includes
 const ordHechas = () => { try { return JSON.parse(canalLs(z => z.getItem('pz_ord_hechas')) || '[]'); } catch (e) { return []; } };
 function marcarHecha(id) { const h = ordHechas(); if (!h.includes(id)) { h.push(id); canalLs(z => z.setItem('pz_ord_hechas', JSON.stringify(h.slice(-300)))); } }
 async function canalConectar() {
+  if (!enInicioIphone()) return hojaMensaje('Conéctala desde el ícono', 'Abre Pableque Z desde su ícono en la pantalla de inicio y toca CONECTAR ahí. En Safari los datos son otros y la clave quedaría en el lugar equivocado.');   // v54n
   let k = canalClave();
   if (!k) { k = aLetras(crypto.getRandomValues(new Uint8Array(32))); canalLs(z => z.setItem('pz_canal', k)); }
   if (canalClave() !== k) return hojaMensaje('No pude guardar la clave', 'Este iPhone no dejó guardar la clave del canal. Cierra la app del todo y vuelve a tocar CONECTAR.');
   const txt = 'CLAVE DEL CANAL DE RAGNAR · ' + k; let ok = false;
   try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) {}
-  abrirHoja('Conectar con Ragnar', `<p class="sub">${ok ? '<b>Ya la copié.</b> Ve al chat con Ragnar, pégala y envíala. Desde ahí lo que me pidas llega solo a tu app.' : 'Mantén presionado el recuadro › Seleccionar todo › Copiar, y pégalo en el chat con Ragnar.'}</p><textarea id="canal-txt" readonly rows="4" style="width:100%;box-sizing:border-box;font-size:16px;line-height:1.4;font-family:inherit;margin-top:10px;padding:10px;border:2px solid #C9C2B4;border-radius:6px;background:#fff;word-break:break-all">${txt}</textarea><p class="nota">Es tu clave secreta: dásela solo a Ragnar. Con ella cifro tus órdenes y nadie más las puede leer, ni en la página.</p>`, 'pergamino');
+  abrirHoja('Conectar con Ragnar', `<p class="sub">${ok ? '<b>Ya quedó copiada.</b> Ve al chat con Ragnar, pégala y envíala. Desde ahí lo que le pidas llega solo a tu app.' : 'Mantén presionado el recuadro › Seleccionar todo › Copiar, y pégalo en el chat con Ragnar.'}</p><textarea id="canal-txt" readonly rows="4" style="width:100%;box-sizing:border-box;font-size:16px;line-height:1.4;font-family:inherit;margin-top:10px;padding:10px;border:2px solid #C9C2B4;border-radius:6px;background:#fff;word-break:break-all">${txt}</textarea><p class="nota">Es tu clave secreta: dásela solo a Ragnar. Con ella Ragnar cifra tus pedidos y nadie más los puede leer, ni en la página.</p>`, 'pergamino');
   repintar();
 }
+function cajaCanal() {   // v54n: la caja de Inicio dice el estado real del canal
+  if (!enInicioIphone()) return `<div class="aviso-drive" id="aviso-ord"><b>Ragnar anota por ti</b><p>Cuando abras Pableque Z desde su ícono, conéctala una vez con Ragnar y lo que le pidas por el chat se anota solo.</p></div>`;
+  if (!canalClave()) return `<div class="aviso-drive" id="aviso-ord"><b>Conecta tu app con Ragnar</b><p>Una sola vez: toca CONECTAR y pega en el chat con Ragnar lo que se copia. Desde ahí lo que le pidas se anota solo aquí.</p><div class="ad-b"><button class="btn" data-accion="canal-conectar">CONECTAR CON RAGNAR</button><button class="btn" data-accion="ord-pegar" style="background:var(--crema)">PEGAR ÓRDENES</button></div></div>`;
+  if (typeof CANAL !== 'object' || !CANAL) return '';
+  if (CANAL.ilegible) return `<div class="aviso-drive" id="aviso-ord"><b>Hay pedidos de Ragnar que no pude leer</b><p>La clave de este iPhone cambió. Toca CONECTAR DE NUEVO y pega en el chat con Ragnar la clave nueva.</p><div class="ad-b"><button class="btn" data-accion="canal-nueva">CONECTAR DE NUEVO</button></div></div>`;
+  const desh = CANAL.antes && CANAL.ev === EV ? `<div class="ad-b"><button class="btn" data-accion="canal-deshacer" style="background:var(--crema)">DESHACER LO DE RAGNAR</button></div>` : '';
+  return `<div class="aviso-drive" id="aviso-ord"><b>Conectado con Ragnar ✓</b><p>Lo que le pidas por el chat se anota solo cuando abres la app.${CANAL.ult ? ` Última revisión: ${CANAL.ult}${desh ? ' · anotó tu último pedido' : ' · sin pedidos nuevos'}.` : ''}</p>${desh}</div>`;
+}
 function hojaCanal(o, s) {
-  abrirHoja('Ragnar anotó tu pedido', `<p class="sub">Lo que me pediste por el chat ya quedó en tu app. Si algo no te cuadra, toca DESHACER.</p><div class="mov-lista" style="margin-top:10px">${s.res.map(z => fila({ ic: z.o.tipo === 'gasto' ? 'baston' : 'pergamino', n: esc(z.o.et || ''), sello: sello('HECHO', 'ok'), sub: z.txt, v: z.o.n > 0 ? peso(z.o.n) : '' })).join('')}</div>`
+  abrirHoja('Ragnar anotó tu pedido', `<p class="sub">Lo que le pediste a Ragnar por el chat ya quedó en tu app. Si algo no te cuadra, toca DESHACER.</p><div class="mov-lista" style="margin-top:10px">${s.res.map(z => fila({ ic: z.o.tipo === 'gasto' ? 'baston' : 'pergamino', n: esc(z.o.et || ''), sello: sello('HECHO', 'ok'), sub: z.txt, v: z.o.n > 0 ? peso(z.o.n) : '' })).join('')}</div>`
     + `<div class="previa" id="canal-prev">Tu banco: <b>${peso(s.banco0)}</b> → <b>${peso(s.banco1)}</b><br>Nio te debe: <b>${peso(Math.max(s.nio0, 0))}</b> → <b>${peso(Math.max(s.nio1, 0))}</b><br>Libre para gastar: <b>${peso(s.dif0)}</b> → <b>${peso(s.dif1)}</b></div>`
     + `<div class="accion-fija"><button class="btn ancho" data-accion="canal-ok">ENTENDIDO</button><button class="btn ancho" data-accion="canal-deshacer" style="margin-top:8px;background:var(--crema)">DESHACER</button></div>`, 'pergamino');
 }
 function canalDeshacer() {
-  if (CANAL.antes) { restaurar(CANAL.antes); CANAL.antes = null; }
+  if (CANAL.antes && CANAL.ev === EV) { restaurar(CANAL.antes); CANAL.antes = null; }
+  else if (CANAL.antes) { CANAL.antes = null; cerrarHoja(); repintar(); return hojaMensaje('Ya no se puede deshacer aquí', 'Anotaste algo después del pedido de Ragnar: deshacerlo borraría lo tuyo. Pídele a Ragnar por el chat que lo corrija.'); }
   cerrarHoja(); repintar(); guardarEstado(); aviso('Listo, quedó como antes. Dime por el chat qué corrijo.');
 }
 function canalOcupadoPantalla() {
@@ -3144,18 +3154,22 @@ async function revisarCanal() {
   CANAL.ocupado = true; CANAL.n = 0;
   try {
     const r = await fetch('ordenes.json?t=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return;
-    const j = await r.json(), clave = await crypto.subtle.importKey('raw', deLetras(k), 'AES-GCM', false, ['decrypt']);
-    for (const e of (j.lista || [])) {
-      let t; try { t = new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deLetras(e.iv) }, clave, deLetras(e.d))); } catch (_) { continue; }
+    const j = await r.json(), clave = await crypto.subtle.importKey('raw', deLetras(k), 'AES-GCM', false, ['decrypt']), lst = j.lista || [];
+    let leidas = 0; CANAL.ult = horaAhora();
+    for (const e of lst) {
+      let t; try { t = new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deLetras(e.iv) }, clave, deLetras(e.d))); leidas++; } catch (_) { continue; }
       const o = leerOrdenes(t); if (!o || o.ya || ordHechas().includes(o.id) || CANAL.visto[o.id]) continue;
       if (canalOcupadoPantalla()) { setTimeout(revisarCanal, 3000); return; }   // no interrumpe lo que estás haciendo
       CANAL.visto[o.id] = true;
       const sm = simularOrdenes(o);
       if (sm.res.some(z => z.err)) return hojaOrdenes(t);   // algo no calza: no anoto nada y te muestro qué
-      marcarHecha(o.id); CANAL.antes = instante();
-      aplicarOrdenes(o.l, o.id); repintar(); guardarEstado(); celebrar('¡DESEO CUMPLIDO!');
+      const antes = instante(); let ok = false;
+      try { aplicarOrdenes(o.l, o.id); ok = await guardarYa(); } catch (_) { ok = false; }
+      if (!ok) { restaurar(antes); repintar(); guardarEstado(); CANAL.visto[o.id] = false; return hojaMensaje('No pude anotar el pedido de Ragnar', 'No se pudo guardar en este iPhone, así que no anoté nada. Cierra la app del todo y ábrela otra vez: lo vuelvo a intentar.'); }
+      marcarHecha(o.id); CANAL.antes = antes; CANAL.ev = EV; repintar();   // v54n: hecha solo después de guardar
       return hojaCanal(o, sm);   // una tanda a la vez; la siguiente llega al volver a la app
     }
+    CANAL.ilegible = lst.length > 0 && leidas === 0; repintar();
   } catch (_) {} finally { CANAL.ocupado = false; }
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(revisarCanal, 800); });
