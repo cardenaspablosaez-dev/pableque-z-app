@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-9vzSmpgoEbKDD3YIT8lz06bYZJc7EDADqnrPukGWUzg=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-3VcMMeoi6qGWrlNAUTDOFMNft8PjAb8887pyYqCTk8I=' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -3091,6 +3091,7 @@ async function pegarOrdenes() {
   abrirHoja('Órdenes de Ragnar', `<p class="sub">Pega aquí el bloque que te mandé por el chat: mantén presionado el recuadro › Pegar.</p><textarea id="ord-in" rows="7" autocomplete="off" style="width:100%;box-sizing:border-box;font-size:16px;line-height:1.4;font-family:inherit;margin-top:10px;padding:10px;border:2px solid #C9C2B4;border-radius:6px;background:#fff" placeholder="ÓRDENES DE RAGNAR · id …"></textarea><button class="btn ancho" data-accion="ord-leer" style="margin-top:12px">REVISAR LAS ÓRDENES</button>`, 'pergamino');
 }
 function hojaOrdenes(t) {
+  if (/clave del canal de ragnar/.test(normT(t))) return hojaMensaje('Esa es tu clave, no un pedido', 'La clave no se pega aquí: pégala en el chat con Ragnar en la app de Claude (donde le pides las cosas). Él la guarda y desde ahí tus pedidos llegan solos.');   // v54o
   const o = leerOrdenes(t); if (!o) return hojaMensaje('Eso no son órdenes', 'Lo que pegaste no trae la línea «ÓRDENES DE RAGNAR». Copia el bloque completo que te mandé por el chat.');
   ORD.txt = t; ORD.o = o; const s = simularOrdenes(o), malas = s.res.filter(z => z.err), n = s.res.length;
   let h = o.ya ? `<p class="nota" style="margin-top:0">Estas órdenes (${esc(o.id)}) ya las aplicaste: si las aplicas otra vez, se anotan dos veces.</p>` : `<p class="sub">Revisa lo que voy a hacer. Nada cambia hasta que toques APLICAR.</p>`;
