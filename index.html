@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-ysRA6TbzJ0a46dLaQr23GuQPUw29UVUJKM9ua6VHIBQ='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-ACVKfFe5MEer18/Im5ykL4RGs/cgVIWZXFpFvoUkjOw=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -1470,7 +1470,7 @@ const esNioX = e => !!e && e[3] === 'nio';
 // Ícono de la tarjeta (dibujo propio, mismo estilo que los demás).
 ICONOS.tarjeta = '<path d="M4.4 8.2h23.2a2.6 2.6 0 0 1 2.6 2.6v12.8a2.6 2.6 0 0 1 -2.6 2.6h-23.2a2.6 2.6 0 0 1 -2.6 -2.6v-12.8a2.6 2.6 0 0 1 2.6 -2.6z" fill="#1E3A8A"/><path d="M4.4 8.2h23.2a2.6 2.6 0 0 1 2.6 2.6v12.8a2.6 2.6 0 0 1 -2.6 2.6h-23.2a2.6 2.6 0 0 1 -2.6 -2.6v-12.8a2.6 2.6 0 0 1 2.6 -2.6z" fill="#3B6FE0" transform="matrix(0.92 0 0 0.9 1.28 1.72)"/><path d="M1.8 11.6h28.4v3h-28.4z" fill="#FF7A1A"/><path d="M4.4 8.2h23.2a2.6 2.6 0 0 1 2.6 2.6v12.8a2.6 2.6 0 0 1 -2.6 2.6h-23.2a2.6 2.6 0 0 1 -2.6 -2.6v-12.8a2.6 2.6 0 0 1 2.6 -2.6z" fill="none" stroke="#141210" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.4 16.8h5.2a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-5.2a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1z" fill="#FFD23F" stroke="#141210" stroke-width="1"/><path d="M9 16.8v5M5.4 19.3h7.2" fill="none" stroke="#141210" stroke-width=".7"/><path d="M5.8 24.2h3M10.6 24.2h3M15.4 24.2h3" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity=".9"/><circle cx="24.4" cy="20.2" r="3.3" fill="#FF9F1C" stroke="#141210" stroke-width="1"/><circle cx="23.4" cy="19.2" r="1" fill="#fff" opacity=".85"/><circle cx="24.9" cy="20.8" r=".9" fill="#E0221A"/><path d="M5.2 10.1h8" fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" opacity=".7"/>';
 // Cuentas que cambian con el dólar o el consumo: al pagarlas se pregunta cuánto te cobraron.
-const esCobroVar = x => !!x && !x.variable;   // v54e: toda cuenta (no los sobres) se paga con lo cobrado de verdad; viene escrito el presupuesto
+const esCobroVar = x => !!x && !x.variable && (x.sec !== 'auto' || x.cobro === 'variable');   // v54h: las automáticas son fijas (el Dividendo pregunta por la subida)   // v54e: toda cuenta (no los sobres) se paga con lo cobrado de verdad; viene escrito el presupuesto
 // Calendario: el mes en curso de la app (S.mes) manda; los 12 meses de la proyección parten desde él.
 const NOMBRE_MES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 let MESES_N = [], DIAS_MES = 31, DIA = 1;
@@ -1489,7 +1489,7 @@ function rehacerMeses() {
 // banco = «Sueldo Restante» de tu planilla (captura de Pablo del 16-oct) · sueldo = sueldo del plan · pago = próximo pago de sueldo (lo cambias cuando te paguen)
 const S = { mes: { anio: 2026, mes: 9 }, sueldoRecibido: null, extrasMes: null, historial: [], nioArrastre: 0, gcArrastre: 0, depAdel: null, bonos: {}, cpf: 'pend', cnf: 'pend', banco: 0, sueldo: SUELDO0, pago: SUELDO0, items: clon(ITEMS0), depto: clon(DEPTO0), movs: [], cf: 'pend', hf: 'mes', hcat: null, pl: 'plan', pant: 'inicio' };
 const instante = () => clon({ extrasMontos: EXTRAS.map(e => e[1]), mes: S.mes, sueldoRecibido: S.sueldoRecibido, extrasMes: S.extrasMes, nioArrastre: S.nioArrastre || 0, gcArrastre: S.gcArrastre || 0, depAdel: S.depAdel || null, bonos: S.bonos, banco: S.banco, sueldo: S.sueldo, pago: S.pago, items: S.items, depto: S.depto, movs: S.movs });
-const restaurar = x => Object.assign(S, clon(x));
+const restaurar = x => { Object.assign(S, clon(x)); if (Array.isArray(x.extrasMontos)) x.extrasMontos.forEach((v, i) => { if (EXTRAS[i] && typeof v === 'number') EXTRAS[i][1] = v; }); };   // v54h
 const it = id => S.items.find(x => x.id === id);
 const parte = x => x.sec === 'mutuo' ? x.valor * .7 : x.valor;
 const parteNio = x => x.sec === 'mutuo' ? x.valor * .3 : 0;
@@ -2015,7 +2015,8 @@ function hojaItem(id) {
   const x = it(id);
   const sube = x.id === 'dividendo' ? subioDiv() : 0, deb = Math.max(x.nio || 0, 0), puso = Math.max(parteNio(x) - (x.nioPend || 0) - deb, 0);   // v53s C15/C18
   let h = `<p class="hoja-big num">${peso(x.valor + sube)}</p><p class="sub" style="margin-top:2px">${sube ? `${peso(x.valor)} de tu planilla + ${peso(sube)} del arriendo depositado` : x.sec === 'mutuo' ? (x.estado === 'pendiente' && (puso > .5 || deb > .5) ? ['valor total de la cuenta', puso > .5 ? `Nio ya puso ${peso(puso)}` : '', deb > .5 ? `ya te debe ${peso(deb)} de lo que pagaste` : '', faltaNio(x) > .5 ? `${yaPagadoMovs(x) > .5 ? 'con el presupuesto te devolvería' : 'al pagarla te devolverá'} ${peso(faltaNio(x))} más` : ''   /* v54g */].filter(Boolean).join(' · ') : 'valor total de la cuenta · la pagas completa y Nio te devuelve su 30%') : SEC_PL[x.sec].toLowerCase() + ' · solo tuyo'}</p>`;
-  if (x.editable) h += x.estado === 'pagado' ? `<button class="btn sec ancho" data-marca="pagado" data-id="${x.id}" style="margin-top:10px">PARA CAMBIAR EL VALOR, PRIMERO VUELVE A PENDIENTE ›</button>`   // v53s C23
+  if (x.sec !== 'auto') h += x.estado === 'pagado' ?   // v54h: todas menos las automáticas
+    `<button class="btn sec ancho" data-marca="pagado" data-id="${x.id}" style="margin-top:10px">PARA CAMBIAR EL VALOR, PRIMERO VUELVE A PENDIENTE ›</button>`   // v53s C23
     : `<button class="btn sec ancho" data-celda="${x.id}" style="margin-top:10px">CAMBIAR EL VALOR ✎</button>`;
   if (x.sec === 'mutuo') h += `<div class="parte"><div><small>TU PARTE 70%</small><b class="num">${peso(parte(x))}</b></div><div><small>NIO 30%</small><b class="num">${peso(parteNio(x))}</b></div></div>`;
   if (x.estado === 'pendiente' && !x.variable) h += `<div class="casc">${lin(x.sec === 'mutuo' ? 'Te queda por pagar (tu parte)' : 'Te queda por pagar', peso(x.queda))}${x.sec === 'mutuo' ? lin(yaPagadoMovs(x) > .5 ? 'Parte de Nio sin pagar (con el presupuesto)' : 'Parte de Nio aún sin pagar', peso(x.nioPend || 0)) + ((x.nioAdel || 0) > .5 ? lin('Nio ya te adelantó (está en tu banco)', peso(Math.min(x.nioAdel, x.nioPend || 0))) : '') + lin(yaPagadoMovs(x) > .5 ? 'Si sale lo presupuestado, salen de tu banco' : 'Al pagarla sale de tu banco', peso(x.queda + (x.nioPend || 0)), 'res') : ''}</div>`;
@@ -2204,9 +2205,17 @@ function hojaMes(k) {
    ${k === 0 ? `<button class="btn ancho" data-accion="cuadrar" style="margin-top:14px">CUADRAR Y CERRAR ${MESES_N[0].toUpperCase()}</button><p class="nota" style="margin-top:6px">Lo disparas tú cuando quieras: primero cuadramos, después se cierra. Nada cambia hasta que confirmes.</p>` : ''}
    ${k === 0 && (S.historial || [])[0] && S.historial[0].antes ? `<button class="btn sec ancho" data-accion="volver-cierre" style="margin-top:10px">VOLVER A ${S.historial[0].nombre.toUpperCase()} (DESHACER EL CIERRE)</button>` : ''}`, 'nimbo');
 }
+// v54h: cambiar el valor de un extra del mes
+function hojaCeldaExtra(n) {
+  const e = EXTRAS.find(z => z[0] === n); if (!e) return;
+  abrirHoja(n, `<label class="campo"><span>VALOR DEL MES</span><input id="celda-in" inputmode="numeric" autocomplete="off" value="${e[1] ? e[1].toLocaleString('es-CL') : ''}"></label><div class="previa" id="celda-prev"></div><button class="btn ancho" data-accion="guardar-celdax" data-xn="${esc(n)}">GUARDAR VALOR</button><p class="nota" style="margin-top:10px">${e[2] ? 'Este extra es solo de este mes.' : 'El valor nuevo vale desde este mes y los meses que vienen parten con él.'}</p>`, EXT_IC[n]);
+  const inp = $('#celda-in'), prev = () => { const v = soloNum(inp.value), p = extraPend(e);
+    $('#celda-prev').innerHTML = `${esc(n)}: <b>${peso(e[1])}</b> → <b>${peso(v)}</b>` + (p > .5 ? `<br>Por pagar este mes: <b>${peso(p)}</b> → <b>${peso(Math.max(p - e[1] + v, 0))}</b>` : '<br><span class="gris">Este mes ya está pagado: el valor nuevo cuenta desde el mes que viene.</span>'); };
+  inp.addEventListener('input', () => { const v = soloNum(inp.value); inp.value = v ? v.toLocaleString('es-CL') : ''; prev(); }); prev();
+}
 function hojaExtra(n) {
   const e = EXTRAS.find(z => z[0] === n), p = extraPend(e), x = extraMes(n);
-  abrirHoja(n, `<p class="hoja-big num">${peso(e[1])}</p><p class="sub">${e[2] ? 'extra solo de este mes' : 'extra de cada mes'}, aparte de las cuentas (como en tu planilla)${esNioX(e) ? '. Se lo debes a Nio: no sale de tu banco, se descuenta de lo que ella te debe' : ''}</p>${x && x.deuda && p ? `<div class="casc">${lin('Este mes', peso(e[1]))}${lin('+ Venía del mes anterior', peso(x.deuda))}${lin('= Por pagar', peso(p), 'res')}</div>` : ''}
+  abrirHoja(n, `<p class="hoja-big num">${peso(e[1])}</p><button class="btn sec ancho" data-celdax="${esc(n)}" style="margin-top:10px">CAMBIAR EL VALOR ✎</button><p class="sub" style="margin-top:8px">${e[2] ? 'extra solo de este mes' : 'extra de cada mes'}, aparte de las cuentas (como en tu planilla)${esNioX(e) ? '. Se lo debes a Nio: no sale de tu banco, se descuenta de lo que ella te debe' : ''}</p>${x && x.deuda && p ? `<div class="casc">${lin('Este mes', peso(e[1]))}${lin('+ Venía del mes anterior', peso(x.deuda))}${lin('= Por pagar', peso(p), 'res')}</div>` : ''}
    <p class="anton" style="font-size:14px;letter-spacing:1px;margin-top:16px">ESTADO</p><button class="marca ${p ? '' : 'on'}" data-extrapag="${n}"><span class="caja">${p ? '' : '✓'}</span><span><b>${p ? 'Marcar como pagado' : 'Pagado'}</b><small>${p ? (esNioX(e) ? `se descuentan ${peso(p)} de lo que Nio te debe` : `saldrán ${peso(p)} de tu banco`) : esNioX(e) ? 'descontado de lo que Nio te debe' : 'listo este mes'}</small></span></button>`, EXT_IC[n]);
 }
 // ---------- Cuadrar y cerrar el mes: lo dispara Pablo. Primero cuadra (cuentas sin pagar, banco, sueldo); recién al confirmar se cierra. ----------
@@ -2320,8 +2329,16 @@ function hojaCelda(id) {
   const esS = id === 'sueldo', x = esS ? null : it(id), v0 = esS ? S.sueldo : x.valor;
   if (!esS && x.estado === 'pagado') return hojaItem(id);   // v53s C23: primero vuelve a pendiente
   abrirHoja(esS ? 'Sueldo' : x.n, `<label class="campo"><span>${esS ? 'SUELDO DEL MES (PLAN)' : x.sec === 'mutuo' ? 'VALOR TOTAL DE LA CUENTA' : 'VALOR DEL MES'}</span><input id="celda-in" inputmode="numeric" autocomplete="off" value="${v0.toLocaleString('es-CL')}"></label>
-   <div class="previa" id="celda-prev"></div><button class="btn ancho" data-accion="guardar-celda" data-id="${id}">GUARDAR VALOR</button><p class="nota" style="margin-top:10px">Cambia el valor solo en la app. Si después cambias tu planilla en Drive, manda la planilla.</p>`, esS ? 'zeni' : x.ic);
+   <div class="previa" id="celda-prev"></div><button class="btn ancho" data-accion="guardar-celda" data-id="${id}">GUARDAR VALOR</button><p class="nota" style="margin-top:10px">${!esS && x.sec === 'mutuo' ? 'Tu 70% y el 30% de Nio se recalculan solos. ' : ''}El valor nuevo vale desde este mes y los meses que vienen parten con él.</p>`, esS ? 'zeni' : x.ic);
   const inp = $('#celda-in'); inp.addEventListener('input', () => { const n = soloNum(inp.value); inp.value = n ? n.toLocaleString('es-CL') : ''; previaCelda(id); }); previaCelda(id);
+}
+// v54h: tras cambiar el valor de una compartida. Si ya pagaste más que tu 70% nuevo, lo que pasa cubre el 30% de Nio (te lo
+// debe); si Nio ya puso más que su 30% nuevo, primero vuelve a ser tuyo lo que le cubriste y el resto se lo debes tú.
+function ajustar70(x) { const r10 = v => Math.round(v * 10) / 10;
+  if (x.queda < -.5 && (x.nioPend || 0) > .5) { const m = Math.min(-x.queda, x.nioPend), ad = Math.min(Math.max(x.nioAdel || 0, 0), m);
+    x.queda = r10(x.queda + m); x.nioPend = r10(x.nioPend - m); x.nio = r10((x.nio || 0) + m - ad); x.nioAdel = r10((x.nioAdel || 0) - ad); }
+  if ((x.nioPend || 0) < -.5) { const exc = r10(-x.nioPend), b = Math.min(Math.max(x.nio || 0, 0), exc), rest = r10(exc - b);
+    x.nioPend = 0; x.nio = r10((x.nio || 0) - b); x.queda = r10(x.queda - b); if (rest > .5) x.debes = r10((x.debes || 0) + rest); }
 }
 // Si el 30% nuevo de Nio queda bajo lo que ya adelantó, lo que sobra pasa como adelanto de otra cuenta compartida por
 // pagar; si no cabe en ninguna, queda en tu banco como plata extra (igual que un pago de Nio que no calza con nada).
@@ -2665,6 +2682,7 @@ document.addEventListener('click', e => {
   if (d.movs) return hojaMovs(d.movs);
   if (d.mes) return hojaMes(+d.mes);
   if (d.celda) return hojaCelda(d.celda);
+  if (d.celdax) return hojaCeldaExtra(d.celdax);   // v54h
   if (d.mov) { const m = movsMes().find(x => x.id === d.mov); return abrirHoja(m.n, `<p class="hoja-big num" style="${m.tipo === 'ing' ? 'color:var(--ok)' : ''}">${m.tipo === 'ing' ? '+' : '−'}${peso(m.monto)}</p><p class="sub">${m.cuando}${m.nota ? ' · ' + m.nota : ''}</p>${m.item && it(m.item) && !sinVentana(it(m.item)) ? `<button class="btn sec ancho" data-item="${m.item}">VER LA CUENTA ${it(m.item).n.toUpperCase()} ›</button>` : ''}`, m.ic); }
   if (d.paso) { const [id, i] = d.paso.split(':'), ii = +i, dd = S.depto.find(z => z.id === id), p = dd.pasos[ii];
     if (id === 'gc' && ii === 0) return;   // C13: lo marca el depósito del arrendatario (solo lectura)
@@ -2744,12 +2762,14 @@ document.addEventListener('click', e => {
     case 'ver-falta': { const o = origenAqui(); cerrarHoja(true); ir('pablo', { ver: 'pend' }); S.volver = o.p === 'pablo' ? null : o; return pintarVolver(); }
     case 'cancelar-conf': pendiente = null; return $('#hoja-c .confirma')?.remove();
     case 'ok-conf': { const fn = pendiente; pendiente = null; return fn && fn(); }
+    case 'guardar-celdax': { const n = d.xn, v = soloNum($('#celda-in').value), e = EXTRAS.find(z => z[0] === n); if (!e) return;   // v54h
+      return cambiarHoja(`${n}: ahora vale ${peso(v)}.`, () => { e[1] = v; }, () => hojaExtra(n), true); }
     case 'guardar-celda': { const id = d.id, n = soloNum($('#celda-in').value), sAd = id === 'sueldo' ? null : simAdelCelda(id, n);
       const x0 = id === 'sueldo' ? null : it(id), txt = `${x0 ? x0.n : 'Sueldo'}: ahora vale ${peso(n)}.` + (x0 && x0.estado === 'pendiente' ? ' Sigue por pagar.' : '') + textoAdelSobra(sAd);   // v53s C24
       return (x0 ? (t, f) => cambiarHoja(t, f, () => hojaItem(id), true) : cambiar)(txt, () => {
         if (id === 'sueldo') { S.sueldo = n; return; }
         const x = it(id), dP = (x.sec === 'mutuo' ? .7 : 1) * (n - x.valor), dN = x.sec === 'mutuo' ? .3 * (n - x.valor) : 0; x.valor = n;
-        if (x.estado === 'pendiente') { x.queda = Math.round((x.queda + dP) * 10) / 10; if (x.sec === 'mutuo') x.nioPend = Math.round(((x.nioPend || 0) + dN) * 10) / 10; } if (x.sec === 'mutuo') moverAdelSobra(x); }); }
+        if (x.estado === 'pendiente') { x.queda = Math.round((x.queda + dP) * 10) / 10; if (x.sec === 'mutuo') x.nioPend = Math.round(((x.nioPend || 0) + dN) * 10) / 10; } if (x.sec === 'mutuo' && x.estado === 'pendiente') ajustar70(x); if (x.sec === 'mutuo') moverAdelSobra(x); }); }
   }
 });
 addEventListener('keydown', e => { if (e.key === 'Escape') cerrarHoja(); if (e.key === 'Enter' && e.target.id === 'i-pago') e.target.blur(); });
