@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-cO68T45UnTmR7zk3rtu2OJgmYNIei38oFqlDS4zFo6w='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TG91LUqiCycWv0Erqza1o/Azz2PXnVV3uo/xziwcBwU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -2025,6 +2025,7 @@ function hojaItem(id) {
     `<button class="btn sec ancho" data-marca="pagado" data-id="${x.id}" style="margin-top:10px">PARA CAMBIAR EL VALOR, PRIMERO VUELVE A PENDIENTE ›</button>`   // v53s C23
     : `<button class="btn sec ancho" data-celda="${x.id}" style="margin-top:14px">CAMBIAR EL VALOR ✎</button>`;
   if (x.sec === 'mutuo') h += `<div class="parte"><div><small>TU PARTE 70%</small><b class="num">${peso(parte(x))}</b></div><div><small>NIO 30%</small><b class="num">${peso(parteNio(x))}</b></div></div>`;
+  if (x.estado === 'pagado' && esCobroVar(x)) btnV = `<button class="btn ancho" data-accion="corregir-cobro" data-id="${x.id}" style="margin-top:14px">¿TE COBRARON OTRO MONTO? CORRÍGELO ✎</button>` + btnV;   // v54q
   h += btnV;   // v54i: después del 70/30
   if (x.estado === 'pendiente' && !x.variable) h += `<div class="casc">${lin(x.sec === 'mutuo' ? 'Te queda por pagar (tu parte)' : 'Te queda por pagar', peso(x.queda))}${x.sec === 'mutuo' ? lin(yaPagadoMovs(x) > .5 ? 'Parte de Nio sin pagar (con el presupuesto)' : 'Parte de Nio aún sin pagar', peso(x.nioPend || 0)) + ((x.nioAdel || 0) > .5 ? lin('Nio ya te adelantó (está en tu banco)', peso(Math.min(x.nioAdel, x.nioPend || 0))) : '') + lin(yaPagadoMovs(x) > .5 ? 'Si sale lo presupuestado, salen de tu banco' : 'Al pagarla sale de tu banco', peso(x.queda + (x.nioPend || 0)), 'res') : ''}</div>`;
   if (x.variable && x.estado === 'pendiente') { const qd = DIAS_MES - DIA + 1, q = quedaTotal(x);
@@ -2755,6 +2756,9 @@ document.addEventListener('click', e => {
     case 'canal-ok': return cerrarHoja();
     case 'canal-deshacer': return canalDeshacer();
     case 'canal-nueva': canalLs(z => { z.removeItem('pz_canal'); z.removeItem('pz_canal_ok'); }); return canalConectar();   // v54n: clave nueva
+    case 'corregir-cobro': return hojaCorregir(d.id);   // v54q
+    case 'corregir-prev': return previaCorregir(d.id);
+    case 'corregir-ok': return corregirOk(d.id);
     case 'ord-leer': return hojaOrdenes(($('#ord-in') || {}).value || '');
     case 'ord-ok': return aplicarOrdenesOk();
     case 'planilla': return traerPlanilla(true);
@@ -3176,6 +3180,44 @@ async function revisarCanal() {
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(revisarCanal, 800); });
 setTimeout(revisarCanal, 2500);
+// v54q: corregir lo cobrado en una cuenta ya pagada = volver a pendiente + cerrarla con el monto real, en un solo cambio.
+function cobradoDe(y) { const m = movPago(y); return y.cobrado != null ? y.cobrado : m ? m.monto : valorMes(y); }
+function aplicarCorreccion(id, n) {
+  const v = planVolver(id), prev = cobradoDe(it(id)); v.hacer();
+  if (!v.conMov) S.banco += prev;   // se pagó antes de anotarlo aquí: se supone que salió lo que decía la cuenta
+  const r = aplicarOrdenes([{ tipo: 'cerrar', cuenta: id, n, et: '' }], 'corr' + Date.now())[0];
+  if (r.err) throw new Error(r.err); return r;
+}
+function simularCorreccion(id, n) {
+  const antes = instante(), r0 = calc(), b0 = S.banco;
+  try { const r = aplicarCorreccion(id, n), r1 = calc(); return { ok: true, txt: r.txt, banco0: b0, banco1: S.banco, nio0: r0.nio, nio1: r1.nio, dif0: r0.dif, dif1: r1.dif }; }
+  catch (e) { return { ok: false, err: String(e && e.message || e) }; } finally { restaurar(antes); }
+}
+function hojaCorregir(id) {
+  const y = it(id); if (!y) return; const c = cobradoDe(y);
+  abrirHoja(y.n, `<p class="sub">Ya la pagaste con <b>${peso(c)}</b>. Escribe lo que te cobraron de verdad y la app arregla tu banco${y.sec === 'mutuo' ? ' y el 70/30 con Nio' : ''}.</p>
+    <p class="campo"><span>¿CUÁNTO TE COBRARON DE VERDAD?</span></p><label class="edit" style="font-size:16px">$<input id="corr-in" inputmode="numeric" enterkeyhint="done" autocomplete="off" style="font-size:16px" value="${Math.round(c).toLocaleString('es-CL')}" data-accion-input="corregir-prev" data-id="${id}"></label>
+    <div class="previa" id="corr-prev"></div><div class="accion-fija"><button class="btn ancho" id="corr-ok" data-accion="corregir-ok" data-id="${id}">CORREGIR</button></div>`, y.ic);
+  const i = $('#corr-in'); if (i) { i.addEventListener('input', () => previaCorregir(id)); setTimeout(() => { try { i.focus(); i.select(); } catch (_) {} }, 250); }
+  previaCorregir(id);
+}
+function previaCorregir(id) {
+  const y = it(id), n = soloNum(($('#corr-in') || {}).value || ''), b = $('#corr-ok'), pv = $('#corr-prev'); if (!y || !pv) return;
+  const c = cobradoDe(y);
+  if (!(n > 0)) { pv.innerHTML = '<span class="gris">Escribe el monto que te cobraron.</span>'; if (b) b.disabled = true; return; }
+  if (Math.abs(n - c) < 1) { pv.innerHTML = '<span class="gris">Es el mismo monto con que la pagaste: no cambia nada.</span>'; if (b) b.disabled = true; return; }
+  const s = simularCorreccion(id, n);
+  if (!s.ok) { pv.innerHTML = `<b style="color:var(--rojo)">${s.err}</b>`; if (b) b.disabled = true; return; }
+  const d = s.banco1 - s.banco0;
+  pv.innerHTML = `${s.txt}<br>${d > .5 ? `Vuelven <b>${peso(d)}</b> a tu banco` : d < -.5 ? `Salen <b>${peso(-d)}</b> más de tu banco` : 'Tu banco no cambia'}: ${peso(s.banco0)} → <b>${peso(s.banco1)}</b>`
+    + (Math.abs(s.nio1 - s.nio0) > .5 ? `<br>Nio te debe: ${peso(Math.max(s.nio0, 0))} → <b>${peso(Math.max(s.nio1, 0))}</b>` : '')
+    + `<br>Libre para gastar: ${peso(s.dif0)} → <b>${peso(s.dif1)}</b>`;
+  if (b) { b.disabled = false; b.textContent = 'CORREGIR A ' + peso(n); }
+}
+function corregirOk(id) {
+  const y = it(id), n = soloNum(($('#corr-in') || {}).value || ''), s = simularCorreccion(id, n); if (!y || !s.ok) return previaCorregir(id);
+  cambiar(`${y.n} corregido: te cobraron ${peso(n)}.` + (s.banco1 - s.banco0 > .5 ? ` Volvieron ${peso(s.banco1 - s.banco0)} a tu banco.` : ''), () => { aplicarCorreccion(id, n); });
+}
 function cajaRagnar() {
   const tit = `<h3><span class="rg-tit">${FOTO.shenron ? `<img class="rg-ava" src="${FOTO.shenron}" alt="">` : ''}PIDE TU DESEO</span><span>A RAGNAR, TU DRAGÓN</span></h3>`;
   if (!samp) return `<div class="vineta rg">${tit}<p class="pie" style="border-top:0">Pídeme por el chat lo que quieras anotar o corregir. Te mando un bloque «Órdenes de Ragnar»: lo copias y aquí lo pegas.</p><div style="padding:0 14px 14px"><button class="btn ancho" data-accion="ord-pegar">PEGAR ÓRDENES DE RAGNAR</button></div></div>`;   // v54j
