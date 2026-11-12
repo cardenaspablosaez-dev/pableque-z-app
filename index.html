@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-TG91LUqiCycWv0Erqza1o/Azz2PXnVV3uo/xziwcBwU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-12HAiVlvPMWn+GcZdFcD18ZNQ3o/LFE6kniidQDcVUA=' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -3049,8 +3049,10 @@ function leerOrdenes(txt) {
     if (t === 'cerrar') return { tipo: 'cerrar', cuenta: q[1] || '', n: soloNum(q[2] || ''), et: 'Cerrar ' + (q[1] || '') };
     if (t === 'gasto') return { tipo: 'gasto', cuenta: q[1] || '', det: String(q[2] || '').replace(/\s+/g, ' ').slice(0, 60), n: soloNum(q[3] || ''), et: (normT(q[1]) === 'sorpresa' ? 'Gasto sorpresa' : 'Gasto en ' + (q[1] || '')) + (q[2] ? ' · ' + q[2] : '') };
     if (t === 'valor') return { tipo: 'valor', cuenta: q[1] || '', n: soloNum(q[2] || ''), et: 'Valor de ' + (q[1] || '') };
+    if (t === 'por gastar' || t === 'porgastar') return { tipo: 'porgastar', cuenta: q[1] || '', n: soloNum(q[2] || ''), et: 'Por gastar en ' + (q[1] || '') };   // v54t
+    if (t === 'sumar') return { tipo: 'sumar', cuenta: q[1] || '', n: soloNum(q[2] || ''), et: 'Sumar a ' + (q[1] || '') };   // v54r
     return { tipo: '?', et: z, err: 'no entiendo esta línea' }; });
-  return { id: oid, l, ya: S.movs.some(m => m.ord === oid) };
+  return { id: oid, l, ya: S.movs.some(m => m.ord === oid) || ordHechas().includes(oid) };   // v54s
 }
 const cuentaOrd = n => { const k = normT(n); return S.items.find(x => normT(x.n) === k || x.id === k) || null; };
 function ponerValor(x, n) {   // igual que «CAMBIAR EL VALOR»
@@ -3080,6 +3082,15 @@ function aplicarOrdenes(l, oid) {
       if (x.sec === 'auto') return mal(`${esc(x.n)} es automática: su valor es fijo`);
       if (x.estado !== 'pendiente') return mal(`${esc(x.n)} ya está pagada: primero vuelve a pendiente`);
       ponerValor(x, o.n); return res.push({ o, txt: `pasa a ${peso(o.n)}${x.sec === 'mutuo' ? ` · tu 70% ${peso(.7 * o.n)} · Nio 30% ${peso(.3 * o.n)}` : ''}` }); }
+    if (o.tipo === 'porgastar') { const x = cuentaOrd(o.cuenta); if (!x) return mal(`no encuentro la cuenta «${esc(o.cuenta)}»`);   // v54t
+      if (x.estado !== 'pendiente') return mal(`${esc(x.n)} está marcada como pagada: primero vuelve a pendiente`);
+      const q0 = quedaTotal(x); x.queda = Math.round((x.queda + o.n) * 10) / 10;
+      return res.push({ o, txt: `por gastar sube de ${peso(q0)} a ${peso(quedaTotal(x))} · el valor de la cuenta no cambia (${peso(x.valor)})` }); }
+    if (o.tipo === 'sumar') { const x = cuentaOrd(o.cuenta); if (!x) return mal(`no encuentro la cuenta «${esc(o.cuenta)}»`);   // v54r
+      if (x.sec === 'auto') return mal(`${esc(x.n)} es automática: su valor es fijo`);
+      if (x.estado !== 'pendiente') return mal(`${esc(x.n)} ya está pagada: primero vuelve a pendiente`);
+      const v0 = x.valor; ponerValor(x, v0 + o.n);
+      return res.push({ o, txt: `sube de ${peso(v0)} a ${peso(x.valor)} · queda por pagar${x.sec === 'mutuo' ? ` · tu 70% ${peso(.7 * o.n)} · Nio 30% ${peso(.3 * o.n)} de lo sumado` : ''}` }); }
     return mal('no entiendo esta línea'); });
   S.movs.slice(0, Math.max(S.movs.length - n0, 0)).forEach(m => { m.ord = oid; });
   return res;
