@@ -1,5 +1,5 @@
 <!doctype html><html lang="es-CL"><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-DqeqA/kRHDGb01QGLtmiF/Khoyj584D79MjMQVdDbi8=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8HaJW6rbM2pNX8Bh1RydXU/2gIkPi0tSavk2A3AnEIs=' 'sha256-IuOqcvaPdT9pYiWzY/ChKdtsZb8m1gS4CH1sGjMpVno=' 'sha256-R27PJfwzgo7ZilgHyo7UryJcRaoaeITONT/dPPoTeeI=' 'sha256-hJxoJmykTyqwJST6AwyBvuObdRAXZn+zoW45EIOf4no='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Finanzas Pableque Z</title><!-- v53u v53w -->
 <meta name="theme-color" content="#262E62">
 <meta name="color-scheme" content="only light">
@@ -2794,7 +2794,9 @@ addEventListener('keydown', e => { if (e.key === 'Escape') cerrarHoja(); if (e.k
 // Al escribir el sueldo, el cursor se queda donde estabas (corriges un número sin borrar todo).
 document.addEventListener('input', e => { if (e.target.id !== 'i-pago') return; const el = e.target, dig = el.value.slice(0, el.selectionStart || 0).replace(/\D/g, '').length, n = soloNum(el.value);
   el.value = n ? n.toLocaleString('es-CL') : ''; let c = 0, k = 0; while (k < el.value.length && c < dig) { if (/\d/.test(el.value[k])) c++; k++; } try { el.setSelectionRange(k, k); } catch (_) {} });
-document.addEventListener('change', e => { if (e.target.id !== 'i-pago') return; const n = soloNum(e.target.value); if (!n || n === S.pago) { e.target.value = S.pago.toLocaleString('es-CL'); return; } cambiar(`Próximo sueldo: ${peso(n)}. Se recalculó la Diferencia de ${mesN(1)}.`, () => { S.pago = n; }); });
+function guardarPago(el) { if (!el || el.id !== 'i-pago') return; const n = soloNum(el.value); if (!n || n === S.pago) { el.value = S.pago.toLocaleString('es-CL'); return; } cambiar(`Próximo sueldo: ${peso(n)}. Se recalculó la Diferencia de ${mesN(1)}.`, () => { S.pago = n; }); }   // v54v
+document.addEventListener('change', e => guardarPago(e.target));
+document.addEventListener('focusout', e => guardarPago(e.target));   // v54v: también si la app se redibujó mientras escribías
 // ---------- v52: respaldo e importación (solo versión iPhone: window.EN_IPHONE) ----------
 // v53w B4: tras un toque que vuelve a dibujar la hoja (p. ej. elegir una opción del cierre), el foco vuelve al botón gemelo.
 document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('button'); if (!t || t.isConnected) return;
@@ -3191,7 +3193,8 @@ async function revisarCanal() {
       marcarHecha(o.id); CANAL.antes = antes; CANAL.ev = EV; repintar();   // v54n: hecha solo después de guardar
       return hojaCanal(o, sm);   // una tanda a la vez; la siguiente llega al volver a la app
     }
-    CANAL.ilegible = lst.length > 0 && leidas === 0 && canalLs(z => z.getItem('pz_canal_ok')) === '1'; repintar();
+    CANAL.ilegible = lst.length > 0 && leidas === 0 && canalLs(z => z.getItem('pz_canal_ok')) === '1';
+    { const a = document.activeElement; if (!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) repintar(); }   // v54v: no redibuja mientras escribes
   } catch (_) {} finally { CANAL.ocupado = false; }
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(revisarCanal, 800); });
